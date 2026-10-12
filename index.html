@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-Arcade — Games</title>
+<style>
+:root{--bg:#080d12;--panel:#101a20;--line:#26363c;--green:#69f0ae;--muted:#9bb0b6;--text:#eefaf6}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#153128 0%,#080d12 55%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+header{max-width:1100px;margin:auto;padding:34px 20px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{font-size:14px;font-weight:900;letter-spacing:3px;color:var(--green)}h1{font-size:clamp(30px,5vw,54px);margin:8px 0 8px;letter-spacing:-1.5px}.subtitle{color:var(--muted);margin:0}
+.pill{border:1px solid #2c5747;color:var(--green);padding:9px 13px;border-radius:99px;font-size:12px;white-space:nowrap}
+main{max-width:1100px;margin:auto;padding:0 20px 45px}
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:linear-gradient(145deg,rgba(20,34,39,.96),rgba(11,20,25,.97));border:1px solid var(--line);border-radius:20px;padding:22px;min-height:250px;box-shadow:0 12px 35px #0002}
+.card-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.emoji{width:46px;height:46px;display:grid;place-items:center;background:#1b302c;border-radius:14px;font-size:24px}.card h2{margin:0;font-size:20px}.desc{font-size:13px;color:var(--muted);margin-top:5px}
+button,input{font:inherit}button{cursor:pointer;border:1px solid #35534b;background:#18382d;color:var(--text);padding:11px 15px;border-radius:11px;transition:.15s}button:hover{background:#24533f;transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.primary{background:var(--green);border-color:var(--green);color:#052016;font-weight:800}.primary:hover{background:#8dffc2}.controls{display:flex;gap:8px;flex-wrap:wrap}.result{color:var(--green);font-weight:700;min-height:24px;margin:14px 0 0}.small{font-size:12px;color:var(--muted)}input{background:#071015;color:white;border:1px solid #35534b;border-radius:10px;padding:11px;width:110px;outline:none}input:focus{border-color:var(--green)}
+.ttt{display:grid;grid-template-columns:repeat(3,65px);gap:7px;margin-top:12px}.ttt button{height:65px;font-size:27px;font-weight:800;padding:0;background:#0a1518;border-color:#2b4643}.ttt button.x{color:var(--green)}.ttt button.o{color:#a9a2ff}
+.rps button{font-size:22px;min-width:64px}.reaction-pad{margin-top:12px;width:100%;min-height:90px;font-size:18px;font-weight:800;background:#14251f;border:1px dashed #426c59}.reaction-pad.waiting{background:#4c3b13;color:#ffe39b;border-color:#8e702a}.reaction-pad.go{background:#145d3b;color:#d6ffe9;border-color:var(--green)}.reaction-pad.done{background:#17282e;color:#d7f5ff}
+footer{max-width:1100px;margin:auto;padding:0 20px 30px;color:#71878d;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:700px){header{align-items:flex-start;flex-direction:column}.games{grid-template-columns:1fr}.card{padding:18px}.ttt{grid-template-columns:repeat(3,58px)}.ttt button{height:58px}}
+</style>
+
+
+<style>
+.card { position: relative; }
+.fullscreen-game-btn {
+  display: inline-block;
+  margin: 0 0 14px auto;
+  padding: 9px 12px;
+  border: 1px solid #39ff88;
+  border-radius: 10px;
+  color: #eaffea;
+  background: #102417;
+  font: 600 13px Arial, sans-serif;
+  cursor: pointer;
+}
+.fullscreen-game-btn:hover { background: #173b25; }
+.card:fullscreen, .card.game-fallback-fullscreen {
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: auto !important;
+  margin: 0 !important;
+  padding: 28px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #050805 !important;
+  color: #eaffea !important;
+}
+.card:fullscreen .fullscreen-game-btn,
+.card.game-fallback-fullscreen .fullscreen-game-btn {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+</style>
+
+
+<style>
+/* Scale the game to fit the screen in fullscreen */
+.card:fullscreen, .card.game-fallback-fullscreen {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  position: relative;
+}
+.card:fullscreen .fs-stage, .card.game-fallback-fullscreen .fs-stage {
+  width: max-content;
+  max-width: none;
+  transform-origin: center center;
+  margin: 0;
+}
+.card:fullscreen .fullscreen-game-btn, .card.game-fallback-fullscreen .fullscreen-game-btn {
+  position: absolute !important;
+  top: 16px; right: 16px; margin: 0 !important;
+}
+.card:fullscreen #minesBoard, .card.game-fallback-fullscreen #minesBoard { width: 320px; }
+.card:fullscreen #targetArea, .card.game-fallback-fullscreen #targetArea { width: 380px; height: 200px !important; }
+.card.game-fallback-fullscreen { position: fixed !important; inset: 0 !important; z-index: 9998; }
+</style>
+<style>
+#starfield{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block}
+</style>
+<style>
+.card #starfield{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.card:fullscreen .fs-stage,.card.game-fallback-fullscreen .fs-stage{position:relative;z-index:1}
+</style>
+<style>
+.sud{display:grid;grid-template-columns:repeat(9,32px);width:max-content;margin:auto;border:2px solid #42685b;border-radius:8px;overflow:hidden;background:#0a1518}
+.sud button{width:32px;height:32px;padding:0;border-radius:0;border:1px solid #223a38;background:#0a1518;font-size:16px;font-weight:700;color:#a9a2ff;transform:none}
+.sud button:hover{transform:none;background:#13302a}
+.sud button.br{border-right:2px solid #42685b}
+.sud button.bb{border-bottom:2px solid #42685b}
+.sud button.given{color:#eefaf6}
+.sud button.rel{background:#102620}
+.sud button.same{background:#2b4d3f}
+.sud button.sel{background:#1f6a50;outline:2px solid var(--green);outline-offset:-2px}
+.sud button.bad{color:#ff6b6b;background:#3a1a1a}
+.sud button.wrong{box-shadow:inset 0 0 0 2px #ff6b6b}
+.sud-pad{display:grid;grid-template-columns:repeat(5,52px);gap:6px;justify-content:center;margin:12px auto 0}
+.sud-pad button{padding:0;height:38px;font-size:17px;font-weight:700}
+.sud-diff button.on{background:#24533f;border-color:var(--green)}
+</style>
+<style>
+.rules-btn{position:absolute;top:18px;right:18px;width:36px;height:36px;padding:0;display:grid;place-items:center;border:1px solid #39ff88;border-radius:10px;background:#102417;color:#eaffea;font:700 18px Arial,sans-serif;cursor:pointer;z-index:4}
+.rules-btn:hover{background:#173b25}
+.rules-panel{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;gap:12px;padding:22px;border-radius:20px;background:#071015;border:1px solid #39ff88;overflow:auto}
+.rules-panel.open{display:flex}
+.rules-panel h3{margin:0;font-size:20px;color:#69f0ae}
+.rules-panel ul{margin:0;padding-left:20px;line-height:1.55;color:#d6e7e2;font-size:15px}
+.rules-panel li{margin-bottom:6px}
+.rules-close{position:absolute;top:18px;right:18px;width:36px;height:36px;padding:0;border:1px solid #39ff88;border-radius:10px;background:#102417;color:#eaffea;font:700 16px Arial,sans-serif;cursor:pointer}
+.card:fullscreen .rules-btn,.card:fullscreen .rules-panel,.card.game-fallback-fullscreen .rules-btn,.card.game-fallback-fullscreen .rules-panel{display:none !important}
+</style>
+<style>
+html{scroll-behavior:smooth}
+.card{scroll-margin-top:84px}
+.topnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px max(20px,calc((100% - 1100px)/2 + 20px));background:rgba(8,13,18,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:800;font-size:18px;letter-spacing:.5px}
+.brand-mark{display:grid;place-items:center;min-width:38px;height:38px;padding:0 6px;border-radius:11px;background:var(--green);color:#052016;font-weight:900;font-size:17px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;font-weight:700}
+.nav-menu{position:absolute;top:100%;right:max(20px,calc((100% - 1100px)/2 + 20px));width:min(560px,calc(100vw - 24px));margin-top:8px;padding:12px;border:1px solid #39ff88;border-radius:16px;background:#0b141a;box-shadow:0 18px 50px #000a;display:none}
+.nav-menu.open{display:block}
+.nav-search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #35534b;background:#071015;color:var(--text);margin-bottom:10px}
+.nav-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:min(70vh,520px);overflow:auto}
+.nav-item{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 11px;border-radius:11px;background:#10201f;border-color:#26433d}
+.nav-item .e{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:#1b302c;font-size:18px;flex:none}
+.nav-empty{grid-column:1/-1;color:var(--muted);padding:10px;text-align:center}
+@keyframes cardFlash{0%,100%{box-shadow:0 12px 35px #0002}40%{box-shadow:0 0 0 3px var(--green),0 0 35px #69f0ae66}}
+.card.flash{animation:cardFlash 1.2s ease}
+@media(max-width:560px){.brand-name{font-size:16px}.nav-list{grid-template-columns:1fr}}
+</style>
+<style>
+.gcanvas{display:block;width:320px;max-width:100%;height:auto;background:#071015;border:1px solid #263f39;border-radius:14px;margin:12px 0}
+.c4{display:grid;grid-template-columns:repeat(7,38px);gap:5px;padding:8px;width:max-content;margin:12px 0;background:#10201f;border:1px solid #26433d;border-radius:14px}
+.c4 button{width:38px;height:38px;padding:0;border-radius:50%;background:#071015;border:2px solid #223a38;transform:none}
+.c4 button:hover{transform:none;background:#0d1c1e}
+.c4 button.p1{background:#69f0ae;border-color:#69f0ae}
+.c4 button.p2{background:#a9a2ff;border-color:#a9a2ff}
+.c4 button.win{box-shadow:0 0 0 3px #ffd166}
+.lo{display:grid;grid-template-columns:repeat(5,52px);gap:6px;width:max-content;margin:12px 0}
+.lo button{width:52px;height:52px;padding:0;border-radius:12px;background:#0a1518;border:1px solid #2b4643;transform:none}
+.lo button:hover{transform:none}
+.lo button.on{background:#69f0ae;border-color:#8dffc2;box-shadow:0 0 16px #69f0ae88}
+.hm-word{font:700 28px/1.2 "Courier New",monospace;letter-spacing:6px;color:#eefaf6;margin:10px 0;min-height:34px}
+.hm-keys{display:grid;grid-template-columns:repeat(9,32px);gap:5px;width:max-content;margin-top:8px}
+.hm-keys button{width:32px;height:34px;padding:0;font-size:14px;font-weight:700}
+.hm-keys button.ok{background:#1f6a50;border-color:var(--green)}
+.hm-keys button.no{background:#3a1a1a;border-color:#ff6b6b;color:#ff9b9b}
+@media(max-width:420px){.hm-keys{grid-template-columns:repeat(7,32px)}}
+</style>
+<style>
+/* Copy protection (deterrent): no text selection, no callout, no image drag, no printing */
+html,body,*{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
+img,canvas,svg{-webkit-user-drag:none;user-drag:none}
+@media print{html,body{display:none !important}}
+</style>
+<style>
+.hint-btn{background:#2a2512;border-color:#ffd166;color:#ffe9a8}
+.hint-btn:hover{background:#3a3318}
+</style>
+<style>
+.mole-grid{display:grid;grid-template-columns:repeat(3,76px);gap:8px;width:max-content;margin:12px 0}
+.mole-grid button{width:76px;height:76px;padding:0;font-size:36px;border-radius:50%;background:radial-gradient(circle at 50% 70%,#2a1d12 0 55%,#183029 56%);border:2px solid #2b4643;transform:none}
+.mole-grid button:hover{transform:none}
+.mole-grid button.up{background:radial-gradient(circle at 50% 70%,#5a3a1d 0 55%,#183029 56%);border-color:#ffd166}
+.slide{display:grid;gap:6px;width:max-content;margin:12px 0}
+.slide button{width:64px;height:64px;padding:0;font-size:22px;font-weight:800;border-radius:12px;background:#10201f;border:1px solid #2b4643;color:#eefaf6;transform:none}
+.slide button:hover{transform:none;background:#173b25}
+.slide button.empty{visibility:hidden}
+.slide button.ok{background:#1f6a50;border-color:var(--green)}
+.tet-pad{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tet-pad button{min-width:48px;height:42px;padding:0 12px;font-size:18px;font-weight:700}
+</style>
+</head>
+<body>
+<nav class="topnav" id="top">
+  <a class="brand" href="#top" aria-label="G-Arcade home"><span class="brand-mark">G-</span><span class="brand-name">G-Arcade</span></a>
+  <div class="nav-right"><button class="nav-btn" id="navGames" type="button" aria-expanded="false" aria-controls="navMenu">🎮 Games ▾</button></div>
+  <div class="nav-menu" id="navMenu"><input class="nav-search" id="navSearch" type="search" placeholder="Search games…" autocomplete="off" aria-label="Search games"><div class="nav-list" id="navList"></div></div>
+</nav>
+<header>
+  <div><div class="logo">✳ G-ARCADE</div><h1>Play. Test yourself.<br>Win.</h1><p class="subtitle">Quick games — right in your browser.</p></div>
+  <div class="pill">● 26 GAMES · NO DOWNLOAD</div>
+</header>
+<main><div class="games">
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔢</div><div><h2>Guess the Number</h2><div class="desc">I'm thinking of a number from 1 to 100</div></div></div>
+  <div class="controls"><input id="guessInput" type="number" min="1" max="100" placeholder="1–100"><button class="primary" id="guessBtn">Check</button><button id="newGuess">Restart</button></div>
+  <p class="result" id="guessResult" aria-live="polite">Try to guess!</p><div class="small" id="guessCount">Attempts: 0</div>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">⭕</div><div><h2>Tic-Tac-Toe</h2><div class="desc">You play X, the computer plays O</div></div></div>
+  <div class="ttt" id="tttBoard"></div><p class="result" id="tttResult" aria-live="polite">Your move — X</p><button id="tttReset">New game</button>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">✊</div><div><h2>Rock, Paper, Scissors</h2><div class="desc">Pick a gesture and beat the computer</div></div></div>
+  <div class="controls rps"><button data-rps="rock" aria-label="Rock">✊</button><button data-rps="scissors" aria-label="Scissors">✌️</button><button data-rps="paper" aria-label="Paper">✋</button></div>
+  <p class="result" id="rpsResult" aria-live="polite">Ready for a round?</p><div class="small" id="rpsScore">You 0 : 0 Computer</div>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">⚡</div><div><h2>Reaction Test</h2><div class="desc">Click when the screen turns green</div></div></div>
+  <button class="reaction-pad" id="reactionBtn">Click to start</button><p class="result" id="reactionResult" aria-live="polite">Let's test your reaction speed!</p><div class="small" id="reactionBest">Best result: —</div>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🧠</div><div><h2>Quick Math</h2><div class="desc">Solve the problem as fast as you can</div></div></div>
+  <div style="font-size:30px;font-weight:800;margin:8px 0 14px" id="mathQuestion">7 + 5 = ?</div>
+  <div class="controls"><input id="mathInput" type="number" placeholder="Answer"><button class="primary" id="mathBtn">Submit</button><button id="mathNext">New problem</button></div>
+  <p class="result" id="mathResult" aria-live="polite">What's the answer?</p><div class="small" id="mathScore">Correct: 0</div>
+</section>
+
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🎯</div><div><h2>Hit the Target</h2><div class="desc">Click the target before time runs out</div></div></div>
+  <div class="small" id="targetScore">Hits: 0 · Left: 15 s</div>
+  <div id="targetArea" style="height:130px;position:relative;overflow:hidden;background:#071015;border:1px solid #263f39;border-radius:14px;margin:10px 0">
+    <button id="targetDot" aria-label="Target" style="display:none;position:absolute;width:42px;height:42px;border-radius:50%;padding:0;background:#69f0ae;color:#052016;font-size:20px">●</button>
+  </div>
+  <button class="primary" id="targetStart">Start game</button><p class="result" id="targetResult" aria-live="polite">Try to hit as many times as you can!</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🧩</div><div><h2>Find the Pairs</h2><div class="desc">Flip cards and find matching symbols</div></div></div>
+  <div id="memoryBoard" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px"></div>
+  <p class="result" id="memoryResult" aria-live="polite">Moves: 0</p><button id="memoryReset">Shuffle</button>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔐</div><div><h2>Crack the Code</h2><div class="desc">Guess the secret 3-digit code with different digits</div></div></div>
+  <div class="controls"><input id="codeInput" type="number" min="100" max="999" placeholder="3 digits"><button class="primary" id="codeTry">Check</button><button id="codeReset">New code</button></div>
+  <p class="result" id="codeResult" aria-live="polite">The hint shows how many digits are in the right place.</p><div class="small" id="codeCount">Attempts: 0</div>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🟢</div><div><h2>Repeat the Sequence</h2><div class="desc">Memorize the color order and repeat it</div></div></div>
+  <div class="controls" id="sequencePads">
+    <button data-color="0" style="background:#e34d5b;flex:1;min-height:58px">Red</button>
+    <button data-color="1" style="background:#2475e8;flex:1;min-height:58px">Blue</button>
+    <button data-color="2" style="background:#e7bd42;color:#1b1805;flex:1;min-height:58px">Yellow</button>
+    <button data-color="3" style="background:#31b879;color:#052016;flex:1;min-height:58px">Green</button>
+  </div>
+  <p class="result" id="sequenceResult" aria-live="polite">Press “Start” and memorize!</p><button class="primary" id="sequenceStart">Start</button>
+</section>
+
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🐍</div><div><h2>Snake</h2><div class="desc">Collect food and don't hit walls or yourself</div></div></div>
+  <canvas id="snakeCanvas" width="320" height="240" style="display:block;width:100%;max-width:320px;margin:0 auto;background:#071015;border:1px solid #29483c;border-radius:12px;image-rendering:pixelated"></canvas>
+  <div class="controls" style="justify-content:center;margin-top:10px"><button id="snakeUp">↑</button></div>
+  <div class="controls" style="justify-content:center"><button id="snakeLeft">←</button><button id="snakeDown">↓</button><button id="snakeRight">→</button><button id="snakeStart" class="primary">Start / restart</button></div>
+  <p class="result" id="snakeResult" aria-live="polite">Controls: keyboard arrows or buttons.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔢</div><div><h2>2048</h2><div class="desc">Merge equal numbers to reach 2048</div></div></div>
+  <div id="game2048" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#273b37;padding:7px;border-radius:12px;max-width:320px;margin:auto"></div>
+  <p class="result" id="score2048">Score: 0</p><div class="controls"><button id="reset2048" class="primary">New game</button></div>
+  <div class="small">Controls: keyboard arrows or swipe/buttons below.</div>
+  <div class="controls" style="justify-content:center;margin-top:8px"><button data-2048="up">↑</button></div><div class="controls" style="justify-content:center"><button data-2048="left">←</button><button data-2048="down">↓</button><button data-2048="right">→</button></div>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🟦</div><div><h2>Ping Pong</h2><div class="desc">You vs the computer — first to 5 points wins</div></div></div>
+  <canvas id="pongCanvas" width="320" height="200" style="display:block;width:100%;max-width:320px;margin:auto;background:#071015;border:1px solid #29483c;border-radius:12px"></canvas>
+  <div class="controls" style="justify-content:center;margin-top:10px"><button id="pongUp">↑ Up</button><button id="pongDown">↓ Down</button><button id="pongStart" class="primary">Start</button></div>
+  <p class="result" id="pongResult" aria-live="polite">You (left, green) vs computer. Press Start, then use ↑/↓ arrows or buttons, W/S, or drag on the field.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">💣</div><div><h2>Minesweeper</h2><div class="desc">Open cells and avoid hidden bombs</div></div></div>
+  <div id="minesBoard" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px"></div>
+  <p class="result" id="minesResult" aria-live="polite">Careful: there are 10 bombs on the board.</p><button id="minesReset">New game</button>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🧱</div><div><h2>Platformer</h2><div class="desc">Jump across platforms and reach the finish</div></div></div>
+  <canvas id="platformCanvas" width="320" height="190" style="display:block;width:100%;max-width:320px;margin:auto;background:linear-gradient(#0d1a24,#152d27);border:1px solid #29483c;border-radius:12px"></canvas>
+  <div class="controls" style="justify-content:center;margin-top:10px"><button id="platLeft">←</button><button id="platJump" class="primary">Jump ↑</button><button id="platRight">→</button><button id="platReset">Restart</button></div>
+  <p class="result" id="platformResult" aria-live="polite">Reach the golden flag. Use the arrow keys and space bar.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🧩</div><div><h2>Sudoku</h2><div class="desc">Fill every row, column and 3×3 box with 1–9</div></div></div>
+  <div class="controls sud-diff" id="sudokuDiff" style="justify-content:center;margin-bottom:12px"><button data-diff="easy" class="on">Easy</button><button data-diff="medium">Medium</button><button data-diff="hard">Hard</button></div>
+  <div class="sud" id="sudokuBoard"></div>
+  <div class="sud-pad" id="sudokuPad"></div>
+  <div class="controls" style="justify-content:center;margin-top:12px"><button id="sudokuCheck">Check</button><button class="primary" id="sudokuNew">New puzzle</button><button class="hint-btn" id="sudokuHint" type="button">💡 Hint</button></div>
+  <p class="result" id="sudokuResult" aria-live="polite">Pick a cell, then a number.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🎾</div><div><h2>Brick Breaker</h2><div class="desc">Bounce the ball and smash every brick</div></div></div>
+  <canvas id="brkCanvas" class="gcanvas" width="320" height="240"></canvas>
+  <div class="controls"><button class="primary" id="brkStart" type="button">Start game</button></div>
+  <p class="result" id="brkResult" aria-live="polite">Move the mouse or use ← / → to control the paddle.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🐤</div><div><h2>Flappy Flyer</h2><div class="desc">Flap through the gaps without crashing</div></div></div>
+  <canvas id="flpCanvas" class="gcanvas" width="320" height="300"></canvas>
+  <div class="controls"><button class="primary" id="flpBtn" type="button">Flap!</button></div>
+  <p class="result" id="flpResult" aria-live="polite">Click the field, press Space or the button.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔴</div><div><h2>Four in a Row</h2><div class="desc">Connect four discs before the computer does</div></div></div>
+  <div class="c4" id="c4Board"></div>
+  <div class="controls"><button id="c4New" type="button">New game</button></div>
+  <p class="result" id="c4Result" aria-live="polite">Your move — green.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">💡</div><div><h2>Lights Out</h2><div class="desc">Turn off all the lights</div></div></div>
+  <div class="lo" id="loBoard"></div>
+  <div class="controls"><button id="loNew" type="button">New puzzle</button></div>
+  <p class="result" id="loResult" aria-live="polite">Moves: 0</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔤</div><div><h2>Hangman</h2><div class="desc">Guess the word letter by letter</div></div></div>
+  <canvas id="hmCanvas" class="gcanvas" width="320" height="130" style="max-width:320px"></canvas>
+  <div class="hm-word" id="hmWord"></div>
+  <div class="hm-keys" id="hmKeys"></div>
+  <div class="controls" style="margin-top:12px"><button id="hmNew" type="button">New word</button></div>
+  <p class="result" id="hmResult" aria-live="polite">You can make 6 mistakes.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🟦</div><div><h2>Cube Dash</h2><div class="desc">Endless auto-run: jump over spikes and blocks</div></div></div>
+  <canvas id="dashCanvas" class="gcanvas" width="320" height="200"></canvas>
+  <div class="controls"><button class="primary" id="dashBtn" type="button">Jump!</button></div>
+  <p class="result" id="dashResult" aria-live="polite">Click the field, press Space or ↑ to jump. Hold to keep jumping.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔺</div><div><h2>Arrow Dash</h2><div class="desc">Fly the arrow through an endless tunnel full of spikes</div></div></div>
+  <canvas id="arrowCanvas" class="gcanvas" width="320" height="200"></canvas>
+  <div class="controls"><button class="primary" id="arrowBtn" type="button">Hold to go up</button></div>
+  <p class="result" id="arrowResult" aria-live="polite">Hold the field, Space or ↑ to go up — release to go down.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🧱</div><div><h2>Tetris</h2><div class="desc">Stack falling pieces and clear full lines</div></div></div>
+  <canvas id="tetCanvas" class="gcanvas" width="240" height="320" style="width:240px"></canvas>
+  <div class="controls"><button class="primary" id="tetStart" type="button">Start game</button></div>
+  <div class="tet-pad" id="tetPad"><button type="button" data-a="left" aria-label="Move left">◀</button><button type="button" data-a="rot" aria-label="Rotate">↻</button><button type="button" data-a="right" aria-label="Move right">▶</button><button type="button" data-a="down" aria-label="Soft drop">▼</button><button type="button" data-a="drop">Drop</button></div>
+  <p class="result" id="tetResult" aria-live="polite">Press Start. Arrows move, ↑ rotates, Space drops.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🐹</div><div><h2>Whack-a-Mole</h2><div class="desc">Hit the moles before they hide</div></div></div>
+  <div class="mole-grid" id="molesBoard"></div>
+  <div class="controls"><button class="primary" id="molesStart" type="button">Start game</button></div>
+  <p class="result" id="molesResult" aria-live="polite">Score: 0 · Time: 30 s</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🏗️</div><div><h2>Stack Tower</h2><div class="desc">Drop blocks to build the tallest tower</div></div></div>
+  <canvas id="stackCanvas" class="gcanvas" width="240" height="320" style="width:240px"></canvas>
+  <div class="controls"><button class="primary" id="stackBtn" type="button">Drop!</button></div>
+  <p class="result" id="stackResult" aria-live="polite">Click the field, press Space or tap Drop! to start.</p>
+</section>
+<section class="card">
+  <button class="fullscreen-game-btn" type="button" aria-label="Open game in fullscreen">⛶ Fullscreen</button>
+  <div class="card-head"><div class="emoji">🔢</div><div><h2>Sliding Puzzle</h2><div class="desc">Slide the tiles into the right order</div></div></div>
+  <div class="controls sud-diff" id="slideSize" style="margin-bottom:6px"><button data-n="3" class="on" type="button">3×3</button><button data-n="4" type="button">4×4</button></div>
+  <div class="slide" id="slideBoard"></div>
+  <div class="controls"><button class="primary" id="slideNew" type="button">New puzzle</button></div>
+  <p class="result" id="slideResult" aria-live="polite">Moves: 0</p>
+</section>
+</div></main>
+<footer><span>G-ARCADE © 2026</span><span>Made for good vibes ✦</span></footer>
+<script>
+const $=id=>document.getElementById(id);
+let secret=Math.floor(Math.random()*100)+1, guesses=0;
+function resetGuess(){secret=Math.floor(Math.random()*100)+1;guesses=0;$('guessInput').value='';$('guessResult').textContent='New number picked!';$('guessCount').textContent='Attempts: 0'}
+$('guessBtn').onclick=()=>{let n=Number($('guessInput').value);if(!Number.isInteger(n)||n<1||n>100){$('guessResult').textContent='Enter a whole number from 1 to 100.';return}guesses++;$('guessCount').textContent='Attempts: '+guesses;$('guessResult').textContent=n===secret?'🎉 You got it! Attempts: '+guesses:n<secret?'Higher ↑':'Lower ↓'};
+$('newGuess').onclick=resetGuess;$('guessInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('guessBtn').click()});
+
+let board=Array(9).fill(''),ended=false;
+function winner(b){for(let [a,c,d] of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]])if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.every(Boolean)?'draw':null}
+function renderBoard(){let root=$('tttBoard');root.innerHTML='';board.forEach((v,i)=>{let b=document.createElement('button');b.textContent=v;b.className=v.toLowerCase();b.disabled=!!v||ended;b.onclick=()=>move(i);root.appendChild(b)})}
+function move(i){if(board[i]||ended)return;board[i]='X';let w=winner(board);if(w){finishTtt(w);return}let empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);let wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];let pick=null;for(let mark of ['O','X']){for(let line of wins){let vals=line.map(j=>board[j]);if(vals.filter(v=>v===mark).length===2&&vals.includes('')){pick=line[vals.indexOf('')];break}}if(pick!==null)break}if(pick===null)pick=empty.includes(4)?4:empty[Math.floor(Math.random()*empty.length)];if(pick!==undefined)board[pick]='O';w=winner(board);if(w)finishTtt(w);else{$('tttResult').textContent='Your move — X';renderBoard()}}
+function finishTtt(w){ended=true;$('tttResult').textContent=w==='draw'?'Draw!':w==='X'?'🎉 You won!':'Computer won';renderBoard()}
+function resetTtt(){board=Array(9).fill('');ended=false;$('tttResult').textContent='Your move — X';renderBoard()}
+$('tttReset').onclick=resetTtt;renderBoard();
+
+let rpsYou=0,rpsCpu=0;const names={rock:'Rock ✊',scissors:'Scissors ✌️',paper:'Paper ✋'};
+document.querySelectorAll('[data-rps]').forEach(b=>b.onclick=()=>{let you=b.dataset.rps,opts=['rock','scissors','paper'],cpu=opts[Math.floor(Math.random()*3)];let result=you===cpu?'Draw!':(you==='rock'&&cpu==='scissors'||you==='scissors'&&cpu==='paper'||you==='paper'&&cpu==='rock')?'You won the round!':'Computer won the round!';if(you!==cpu){if(result.startsWith('You'))rpsYou++;else rpsCpu++}$('rpsResult').textContent=names[you]+' vs '+names[cpu]+' — '+result;$('rpsScore').textContent=`You ${rpsYou} : ${rpsCpu} Computer`});
+
+let reactionState='idle',startAt=0,timeout=null,best=null;
+$('reactionBtn').onclick=()=>{let b=$('reactionBtn');if(reactionState==='idle'||reactionState==='done'||reactionState==='early'){reactionState='waiting';b.className='reaction-pad waiting';b.textContent='Wait for green…';$('reactionResult').textContent='Don’t click too early!';clearTimeout(timeout);timeout=setTimeout(()=>{reactionState='go';startAt=performance.now();b.className='reaction-pad go';b.textContent='CLICK NOW!'},1000+Math.random()*3000)}else if(reactionState==='waiting'){clearTimeout(timeout);reactionState='early';b.className='reaction-pad';b.textContent='Too early! Start again';$('reactionResult').textContent='False start!';}else if(reactionState==='go'){let ms=Math.round(performance.now()-startAt);reactionState='done';b.className='reaction-pad done';b.textContent='Try again';$('reactionResult').textContent='⚡ Your reaction: '+ms+' ms';if(best===null||ms<best)best=ms;$('reactionBest').textContent='Best result: '+best+' ms'}};
+
+let mathAnswer=12,mathScore=0;
+function nextMath(){let a=Math.floor(Math.random()*20)+1,b=Math.floor(Math.random()*20)+1,op=Math.random()<.5?'+':'−';mathAnswer=op==='+'?a+b:a-b;$('mathQuestion').textContent=`${a} ${op} ${b} = ?`;$('mathInput').value='';$('mathResult').textContent='What’s the answer?'}
+$('mathNext').onclick=nextMath;$('mathBtn').onclick=()=>{if($('mathInput').value.trim()===''){$('mathResult').textContent='Enter an answer first.';return}if(Number($('mathInput').value)===mathAnswer){mathScore++;$('mathResult').textContent='Correct! 🎉';$('mathScore').textContent='Correct: '+mathScore;nextMath()}else $('mathResult').textContent='Not quite. Try again!'};
+$('mathInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('mathBtn').click()});nextMath();
+
+// Hit the Target
+let targetTimer=null,targetLeft=15,targetHits=0,targetActive=false;
+function moveTarget(){const area=$('targetArea'),dot=$('targetDot');const maxX=Math.max(0,area.clientWidth-42),maxY=Math.max(0,area.clientHeight-42);dot.style.left=Math.floor(Math.random()*(maxX+1))+'px';dot.style.top=Math.floor(Math.random()*(maxY+1))+'px'}
+$('targetStart').onclick=()=>{clearInterval(targetTimer);targetLeft=15;targetHits=0;targetActive=true;$('targetDot').style.display='block';$('targetStart').disabled=true;$('targetResult').textContent='Catch the target!';$('targetScore').textContent='Hits: 0 · Left: 15 s';moveTarget();targetTimer=setInterval(()=>{targetLeft--;$('targetScore').textContent=`Hits: ${targetHits} · Left: ${targetLeft} s`;if(targetLeft<=0){clearInterval(targetTimer);targetActive=false;$('targetDot').style.display='none';$('targetStart').disabled=false;$('targetResult').textContent=`Time's up! You hit ${targetHits} times.`}},1000)};
+$('targetDot').onclick=()=>{if(!targetActive)return;targetHits++;$('targetScore').textContent=`Hits: ${targetHits} · Left: ${targetLeft} s`;moveTarget()};
+
+// Find the Pairs
+let memDeck=[],memOpen=[],memMatched=[],memMoves=0,memLock=false;
+function resetMemory(){const symbols=['🍒','🚀','🎮','🐸','⭐','🍕','👑','⚽'];memDeck=[...symbols,...symbols].sort(()=>Math.random()-.5);memOpen=[];memMatched=[];memMoves=0;memLock=false;renderMemory();$('memoryResult').textContent='Moves: 0'}
+function renderMemory(){let root=$('memoryBoard');root.innerHTML='';memDeck.forEach((sym,i)=>{let b=document.createElement('button');b.style.cssText='padding:0;min-height:54px;font-size:24px;background:#0a1518;border-color:#2b4643';b.textContent=memMatched.includes(i)||memOpen.includes(i)?sym:'?';b.disabled=memMatched.includes(i)||memOpen.includes(i)||memLock;b.onclick=()=>flipMemory(i);root.appendChild(b)})}
+function flipMemory(i){if(memLock||memOpen.includes(i)||memMatched.includes(i))return;memOpen.push(i);renderMemory();if(memOpen.length===2){memMoves++;$('memoryResult').textContent='Moves: '+memMoves;if(memDeck[memOpen[0]]===memDeck[memOpen[1]]){memMatched.push(...memOpen);memOpen=[];renderMemory();if(memMatched.length===memDeck.length)$('memoryResult').textContent=`You win! Found all pairs in ${memMoves} moves.`}else{memLock=true;setTimeout(()=>{memOpen=[];memLock=false;renderMemory()},1100)}}}
+$('memoryReset').onclick=resetMemory;resetMemory();
+
+// Crack the Code
+let secretCode='',codeAttempts=0;
+function resetCode(){let digits='0123456789'.split('').sort(()=>Math.random()-.5);secretCode=digits.slice(0,3).join('');if(secretCode[0]==='0')secretCode='1'+secretCode.slice(1);codeAttempts=0;$('codeInput').value='';$('codeResult').textContent='A code of three different digits is ready.';$('codeCount').textContent='Attempts: 0'}
+$('codeReset').onclick=resetCode;
+$('codeTry').onclick=()=>{let s=$('codeInput').value.trim();if(!/^\d{3}$/.test(s)||new Set(s).size!==3){$('codeResult').textContent='Enter 3 different digits.';return}codeAttempts++;let exact=[...s].filter((d,i)=>d===secretCode[i]).length;let present=[...s].filter(d=>secretCode.includes(d)).length;$('codeCount').textContent='Attempts: '+codeAttempts;if(s===secretCode){$('codeResult').textContent=`🔓 Code cracked in ${codeAttempts} attempts!`;return}$('codeResult').textContent=`Correct positions: ${exact}. Digits from the code found: ${present}.`};
+$('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('codeTry').click()});resetCode();
+
+// Repeat the Sequence
+let seq=[],seqIndex=0,seqPlaying=false;
+const seqNames=['Red','Blue','Yellow','Green'];
+function flashPad(i){let b=document.querySelector(`[data-color="${i}"]`);let old=b.style.filter;b.style.filter='brightness(1.7)';setTimeout(()=>b.style.filter=old,400)}
+function playSequence(){seqPlaying=true;let i=0;const timer=setInterval(()=>{if(i>=seq.length){clearInterval(timer);seqPlaying=false;$('sequenceResult').textContent='Now repeat the sequence!';return}flashPad(seq[i++])},800)}
+$('sequenceStart').onclick=()=>{seq=[Math.floor(Math.random()*4)];seqIndex=0;$('sequenceResult').textContent='Watch carefully…';playSequence()};
+document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{if(seqPlaying||seq.length===0)return;let n=Number(b.dataset.color);flashPad(n);if(n!==seq[seqIndex]){$('sequenceResult').textContent='Oops! Press “Start” to try again.';seq=[];return}seqIndex++;if(seqIndex===seq.length){seq.push(Math.floor(Math.random()*4));seqIndex=0;$('sequenceResult').textContent='Level '+seq.length+'! Memorize…';setTimeout(playSequence,500)}});
+
+
+// Snake
+const sc=$('snakeCanvas'),sx=sc.getContext('2d');let snake=[],food={x:5,y:5},sd={x:1,y:0},snakeTimer=null,snakeAlive=false,snakeScore=0;
+function drawSnake(){sx.fillStyle='#071015';sx.fillRect(0,0,sc.width,sc.height);sx.fillStyle='#69f0ae';snake.forEach(p=>sx.fillRect(p.x*16+1,p.y*16+1,14,14));sx.fillStyle='#ff6b6b';sx.fillRect(food.x*16+2,food.y*16+2,12,12)}
+function startSnake(){clearTimeout(snakeTimer);snake=[{x:5,y:7},{x:4,y:7},{x:3,y:7}];food={x:12,y:7};sd={x:1,y:0};snakeAlive=true;snakeScore=0;$('snakeResult').textContent='Score: 0 · Speed: 1';drawSnake();const snakeDelay=()=>Math.max(60,220-snakeScore*10),snakeSpeed=()=>Math.round((220-snakeDelay())/10)+1;const snakeTick=()=>{if(!snakeAlive)return;let h={x:snake[0].x+sd.x,y:snake[0].y+sd.y};if(h.x<0||h.y<0||h.x>=20||h.y>=15||snake.some(p=>p.x===h.x&&p.y===h.y)){clearTimeout(snakeTimer);snakeAlive=false;$('snakeResult').textContent='Game over! Score: '+snakeScore;return}snake.unshift(h);if(h.x===food.x&&h.y===food.y){snakeScore++;$('snakeResult').textContent='Score: '+snakeScore+' · Speed: '+snakeSpeed();food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*15)}}else snake.pop();drawSnake();snakeTimer=setTimeout(snakeTick,snakeDelay())};snakeTimer=setTimeout(snakeTick,snakeDelay())}
+function setSnakeDir(x,y){if(!snakeAlive)return;if(!(sd.x===-x&&sd.y===-y))sd={x,y}}
+$('snakeStart').onclick=startSnake;$('snakeUp').onclick=()=>setSnakeDir(0,-1);$('snakeDown').onclick=()=>setSnakeDir(0,1);$('snakeLeft').onclick=()=>setSnakeDir(-1,0);$('snakeRight').onclick=()=>setSnakeDir(1,0);
+document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&snakeAlive){e.preventDefault();if(e.key==='ArrowUp')setSnakeDir(0,-1);if(e.key==='ArrowDown')setSnakeDir(0,1);if(e.key==='ArrowLeft')setSnakeDir(-1,0);if(e.key==='ArrowRight')setSnakeDir(1,0)}});
+drawSnake();
+
+// 2048
+let grid2048=[],score2048=0;
+function spawn2048(){let e=[];grid2048.forEach((v,i)=>{if(!v)e.push(i)});if(e.length){let i=e[Math.floor(Math.random()*e.length)];grid2048[i]=Math.random()<.9?2:4}}
+function render2048(){let root=$('game2048');root.innerHTML='';grid2048.forEach(v=>{let d=document.createElement('div');d.textContent=v||'';d.style.cssText='height:58px;display:grid;place-items:center;border-radius:7px;font-size:20px;font-weight:900;background:'+(v?'#'+({2:'d9e8d8',4:'b5ddc5',8:'75cfa2',16:'4ab989',32:'278e68',64:'17674d',128:'d4ca69',256:'d4b64f',512:'d99c4a',1024:'d97b4a',2048:'69f0ae'}[v]||'69f0ae'):'#14221f')+';color:'+(v>=8?'#062016':'#18352a');root.appendChild(d)});$('score2048').textContent='Score: '+score2048}
+function reset2048(){grid2048=Array(16).fill(0);score2048=0;spawn2048();spawn2048();render2048()}
+function move2048(dir){let old=grid2048.join(',');for(let r=0;r<4;r++){let ids=Array.from({length:4},(_,c)=>dir==='left'?r*4+c:dir==='right'?r*4+3-c:dir==='up'?c*4+r:(3-c)*4+r);let a=ids.map(i=>grid2048[i]).filter(Boolean),out=[];for(let i=0;i<a.length;i++){if(a[i]===a[i+1]){out.push(a[i]*2);score2048+=a[i]*2;i++}else out.push(a[i])}while(out.length<4)out.push(0);ids.forEach((id,j)=>grid2048[id]=out[j])}if(old!==grid2048.join(','))spawn2048();render2048()}
+document.querySelectorAll('[data-2048]').forEach(b=>b.onclick=()=>move2048(b.dataset['2048']));$('reset2048').onclick=reset2048;document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){if(document.activeElement.tagName!=='INPUT'){move2048(({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'})[e.key])}}});reset2048();
+
+// Ping Pong — you (left, green) vs computer (right, purple). First to 5 wins.
+const pc=$('pongCanvas'),px=pc.getContext('2d');
+const PH=48,WIN_SCORE=5;
+let pY=76,cY=76,ball={x:160,y:100,vx:3,vy:2},pScore=0,cScore=0,pongRun=false,pongId=null,pKeys={up:false,down:false};
+function clampPad(v){return Math.max(0,Math.min(200-PH,v))}
+function resetBall(dir){ball.x=160;ball.y=100;ball.vx=2*dir;ball.vy=(Math.random()<.5?-1:1)*(1.1+Math.random()*1.1)}
+function drawPong(){px.fillStyle='#071015';px.fillRect(0,0,320,200);px.strokeStyle='#42685b';px.setLineDash([5,5]);px.beginPath();px.moveTo(160,0);px.lineTo(160,200);px.stroke();px.setLineDash([]);px.fillStyle='#69f0ae';px.fillRect(10,pY,8,PH);px.fillStyle='#a9a2ff';px.fillRect(302,cY,8,PH);px.fillStyle='#fff';px.beginPath();px.arc(ball.x,ball.y,6,0,Math.PI*2);px.fill();px.fillStyle='#69f0ae';px.font='18px Arial';px.textAlign='center';px.fillText(String(pScore),120,24);px.fillStyle='#a9a2ff';px.fillText(String(cScore),200,24);px.textAlign='start'}
+function pongEnd(msg){pongRun=false;$('pongResult').textContent=msg;$('pongStart').textContent='Play again'}
+function pongPoint(dir){if(pScore>=WIN_SCORE){pongEnd('🏆 You win '+pScore+' : '+cScore+'!');return}if(cScore>=WIN_SCORE){pongEnd('Computer wins '+cScore+' : '+pScore+'. Try again!');return}resetBall(dir)}
+function pongStep(){if(!pongRun)return;
+ if(pKeys.up)pY-=3.2;if(pKeys.down)pY+=3.2;pY=clampPad(pY);
+ // computer paddle: follows the ball but is a bit slower than a steep shot, so it can be beaten
+ const target=ball.y-PH/2;if(Math.abs(target-cY)>4)cY+=Math.sign(target-cY)*1.7;cY=clampPad(cY);
+ ball.x+=ball.vx;ball.y+=ball.vy;
+ if(ball.y<6){ball.y=6;ball.vy=Math.abs(ball.vy)}if(ball.y>194){ball.y=194;ball.vy=-Math.abs(ball.vy)}
+ if(ball.vx<0&&ball.x-6<=18&&ball.x+6>=10&&ball.y>=pY-6&&ball.y<=pY+PH+6){ball.x=24;ball.vx=Math.min(5.2,Math.abs(ball.vx)*1.04);ball.vy=Math.max(-3.8,Math.min(3.8,ball.vy+((ball.y-(pY+PH/2))/(PH/2))*1.9))}
+ if(ball.vx>0&&ball.x+6>=302&&ball.x-6<=310&&ball.y>=cY-6&&ball.y<=cY+PH+6){ball.x=296;ball.vx=-Math.min(5.2,Math.abs(ball.vx)*1.04);ball.vy=Math.max(-3.8,Math.min(3.8,ball.vy+((ball.y-(cY+PH/2))/(PH/2))*1.5))}
+ if(ball.x<-6){cScore++;pongPoint(1)}else if(ball.x>326){pScore++;pongPoint(-1)}
+ drawPong();
+ if(pongRun){$('pongResult').textContent=pongRun?'You '+pScore+' : '+cScore+' Computer — first to '+WIN_SCORE+' wins':'';pongId=requestAnimationFrame(pongStep)}}
+$('pongStart').onclick=()=>{cancelAnimationFrame(pongId);pY=76;cY=76;pScore=0;cScore=0;resetBall(Math.random()<.5?1:-1);pongRun=true;$('pongStart').textContent='Restart';drawPong();pongStep()};
+// Controls: hold the buttons, W / S keys, or drag on the field
+const pHold=(id,key)=>{const b=$(id);b.onpointerdown=e=>{e.preventDefault();pKeys[key]=true};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>pKeys[key]=false};
+pHold('pongUp','up');pHold('pongDown','down');
+document.addEventListener('keydown',e=>{if(e.key==='w'||e.key==='W')pKeys.up=true;if(e.key==='s'||e.key==='S')pKeys.down=true});
+document.addEventListener('keyup',e=>{if(e.key==='w'||e.key==='W')pKeys.up=false;if(e.key==='s'||e.key==='S')pKeys.down=false});
+// Arrow ↑/↓ also control the paddle while Pong is the active game (capture phase, so other games don't react)
+const pongCard=pc.closest('.card');
+const pongActive=()=>pongRun&&(pongCard.contains(document.activeElement)||pongCard.matches(':hover')||document.fullscreenElement===pongCard||pongCard.classList.contains('game-fallback-fullscreen'));
+window.addEventListener('keydown',e=>{if((e.key==='ArrowUp'||e.key==='ArrowDown')&&pongActive()){pKeys[e.key==='ArrowUp'?'up':'down']=true;e.preventDefault();e.stopImmediatePropagation()}},true);
+window.addEventListener('keyup',e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){pKeys[e.key==='ArrowUp'?'up':'down']=false}},true);
+pc.style.touchAction='none';
+const pDrag=e=>{if(!pongRun)return;const r=pc.getBoundingClientRect();pY=clampPad((e.clientY-r.top)*200/r.height-PH/2)};
+pc.addEventListener('pointermove',pDrag);pc.addEventListener('pointerdown',pDrag);
+drawPong();
+
+// Minesweeper
+let mineSet=[],mineOpened=[],mineEnded=false;
+function initMines(){mineSet=[];while(mineSet.length<10){let n=Math.floor(Math.random()*64);if(!mineSet.includes(n))mineSet.push(n)}mineOpened=[];mineEnded=false;renderMines();$('minesResult').textContent='Careful: there are 10 bombs on the board.'}
+function renderMines(){let root=$('minesBoard');root.innerHTML='';for(let i=0;i<64;i++){let b=document.createElement('button');b.style.cssText='padding:0;min-width:0;aspect-ratio:1;font-size:13px;border-radius:5px;background:'+(mineOpened.includes(i)?'#213c31':'#183029');if(mineOpened.includes(i)){if(mineSet.includes(i)){b.textContent='💣';b.style.background='#7e2e37'}else{let count=0;for(let j of mineSet){if(Math.abs((j%8)-(i%8))<=1&&Math.abs(Math.floor(j/8)-Math.floor(i/8))<=1)count++}b.textContent=count||''}}else b.textContent='';b.disabled=mineOpened.includes(i)||mineEnded;b.onclick=()=>openMine(i);root.appendChild(b)}}
+function openMine(i){if(mineEnded||mineOpened.includes(i))return;mineOpened.push(i);if(mineSet.includes(i)){mineEnded=true;mineOpened=Array.from({length:64},(_,j)=>j);$('minesResult').textContent='💥 Boom! Try again.'}else if(mineOpened.filter(j=>!mineSet.includes(j)).length===54){mineEnded=true;$('minesResult').textContent='🏆 You win! All safe cells opened.'}else $('minesResult').textContent='Safely opened: '+mineOpened.filter(j=>!mineSet.includes(j)).length+' of 54';renderMines()}
+$('minesReset').onclick=initMines;initMines();
+
+// Mini platformer
+const plc=$('platformCanvas'),plx=plc.getContext('2d');let player={x:12,y:140,vx:0,vy:0},platKeys={left:false,right:false},platWon=false;
+// 10 levels: each has platforms {x,y,w} and a flag {x,y}. They are played in RANDOM order.
+const LEVELS=[
+ {p:[[0,170,70],[85,148,50],[150,126,50],[215,104,50],[270,82,50]],f:[304,57]},
+ {p:[[0,60,60],[80,85,50],[150,110,50],[220,135,45],[280,170,40]],f:[306,145]},
+ {p:[[0,170,60],[80,140,45],[30,105,45],[100,70,45],[180,100,40],[240,130,40],[280,160,40]],f:[306,135]},
+ {p:[[0,170,40],[85,160,30],[150,150,30],[215,140,30],[270,125,50]],f:[308,100]},
+ {p:[[0,170,50],[65,140,35],[120,110,35],[65,80,35],[130,50,35],[195,70,40],[260,100,60]],f:[306,75]},
+ {p:[[0,150,50],[85,140,40],[160,150,30],[225,130,30],[285,150,35]],f:[306,125]},
+ {p:[[0,170,40],[60,135,25],[105,100,25],[150,135,25],[195,100,25],[240,135,25],[285,160,35]],f:[306,135]},
+ {p:[[0,170,55],[100,160,30],[160,140,30],[220,120,30],[160,95,30],[100,70,30],[40,45,30]],f:[46,20]},
+ {p:[[0,170,40],[95,150,25],[160,130,25],[225,110,25],[285,85,35]],f:[306,60]},
+ {p:[[0,170,40],[70,148,25],[115,120,25],[160,92,25],[205,64,25],[250,92,25],[285,130,35]],f:[306,105]}
+];
+let platforms=[],flag={x:0,y:0},platOrder=[],platIdx=0,platLock=false;
+function shuffle10(){const a=[...Array(LEVELS.length).keys()];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function loadLevel(){const L=LEVELS[platOrder[platIdx]];platforms=L.p.map(a=>({x:a[0],y:a[1],w:a[2]}));flag={x:L.f[0],y:L.f[1]};player={x:platforms[0].x+8,y:platforms[0].y-20,vx:0,vy:0};platWon=false;platLock=false;$('platformResult').textContent='Level '+(platIdx+1)+' of '+LEVELS.length+' — reach the golden flag!';drawPlatform()}
+function drawPlatform(){plx.clearRect(0,0,320,190);plx.fillStyle='#69f0ae';platforms.forEach(p=>plx.fillRect(p.x,p.y,p.w,8));plx.fillStyle='#ffd166';plx.fillRect(flag.x,flag.y,8,25);plx.fillStyle='#a9a2ff';plx.fillRect(player.x,player.y,16,20);plx.fillStyle='#9bb0b6';plx.font='11px Arial';plx.fillText('Level '+(platIdx+1)+'/'+LEVELS.length+'  (map #'+(platOrder[platIdx]+1)+')',6,14)}
+function resetPlatform(){platOrder=shuffle10();platIdx=0;loadLevel()}
+function platformStep(){if(!platLock){player.vx=(platKeys.left?-1.8:0)+(platKeys.right?1.8:0);player.x=Math.max(0,Math.min(304,player.x+player.vx));player.vy+=.2;let oldY=player.y;player.y+=player.vy;for(let p of platforms){if(player.vy>=0&&oldY+20<=p.y&&player.y+20>=p.y&&player.x+16>p.x&&player.x<p.x+p.w){player.y=p.y-20;player.vy=0}}if(player.y>195){loadLevel()}else if(player.x+16>flag.x&&player.x<flag.x+8&&player.y+20>flag.y&&player.y<flag.y+25){platLock=true;platWon=true;if(platIdx>=LEVELS.length-1){$('platformResult').textContent='🏆 All '+LEVELS.length+' levels complete! Press Restart for a new random order.'}else{$('platformResult').textContent='✅ Level '+(platIdx+1)+' complete! Next level…';setTimeout(()=>{platIdx++;loadLevel()},900)}}}drawPlatform();requestAnimationFrame(platformStep)}
+function jumpPlatform(){if(!platLock&&player.vy===0)player.vy=-5.25}
+$('platLeft').onpointerdown=()=>platKeys.left=true;$('platLeft').onpointerup=$('platLeft').onpointerleave=()=>platKeys.left=false;
+$('platRight').onpointerdown=()=>platKeys.right=true;$('platRight').onpointerup=$('platRight').onpointerleave=()=>platKeys.right=false;
+$('platJump').onclick=jumpPlatform;$('platReset').onclick=resetPlatform;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')platKeys.left=true;if(e.key==='ArrowRight')platKeys.right=true;if(e.key===' '||e.key==='ArrowUp')jumpPlatform()});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')platKeys.left=false;if(e.key==='ArrowRight')platKeys.right=false});
+resetPlatform();platformStep();
+
+</script>
+
+<script>
+/* Prevent the webpage from scrolling with arrow keys. */
+window.addEventListener('keydown', function (event) {
+  const blockedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+  if (blockedKeys.includes(event.key)) {
+    const target = event.target;
+    const isTextInput = target && (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.isContentEditable
+    );
+    if (!isTextInput) event.preventDefault();
+  }
+}, { passive: false });
+</script>
+
+
+
+<script>
+(() => {
+  let activeCard = null;
+
+  function leaveFullscreen() {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+    document.querySelectorAll('.game-fallback-fullscreen').forEach(el =>
+      el.classList.remove('game-fallback-fullscreen')
+    );
+    activeCard = null;
+  }
+
+  document.querySelectorAll('.card .fullscreen-game-btn').forEach(button => {
+    button.addEventListener('click', async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const card = button.closest('.card');
+      if (!card) return;
+
+      if (activeCard === card) {
+        leaveFullscreen();
+        return;
+      }
+
+      activeCard = card;
+      if (card.requestFullscreen) {
+        try {
+          await card.requestFullscreen();
+        } catch (_) {
+          card.classList.add('game-fallback-fullscreen');
+        }
+      } else {
+        card.classList.add('game-fallback-fullscreen');
+      }
+      button.textContent = '✕ Exit fullscreen';
+    });
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      document.querySelectorAll('.fullscreen-game-btn').forEach(button => {
+        button.textContent = '⛶ Fullscreen';
+      });
+      document.querySelectorAll('.game-fallback-fullscreen').forEach(el =>
+        el.classList.remove('game-fallback-fullscreen')
+      );
+      activeCard = null;
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      document.querySelectorAll('.fullscreen-game-btn').forEach(button => {
+        button.textContent = '⛶ Fullscreen';
+      });
+      document.querySelectorAll('.game-fallback-fullscreen').forEach(el =>
+        el.classList.remove('game-fallback-fullscreen')
+      );
+      activeCard = null;
+    }
+  });
+})();
+</script>
+
+<script>
+(() => {
+  // Wrap each card's content (except the button) in .fs-stage
+  document.querySelectorAll('.card').forEach(card => {
+    const btn = card.querySelector('.fullscreen-game-btn');
+    const stage = document.createElement('div');
+    stage.className = 'fs-stage';
+    [...card.childNodes].forEach(n => { if (n !== btn) stage.appendChild(n); });
+    card.appendChild(stage);
+  });
+
+  const isFull = c => c.matches(':fullscreen') || c.classList.contains('game-fallback-fullscreen');
+
+  function fit(card) {
+    const stage = card.querySelector('.fs-stage');
+    if (!stage) return;
+    if (!isFull(card)) { stage.style.transform = ''; stage.style.margin = ''; return; }
+    stage.style.transform = 'none';
+    const btn = card.querySelector('.fullscreen-game-btn');
+    const pad = 28;
+    const availW = card.clientWidth - pad * 2;
+    const availH = card.clientHeight - pad * 2;
+    const w = stage.offsetWidth, h = stage.offsetHeight;
+    if (!w || !h) return;
+    const s = Math.max(1, Math.min(availW / w, availH / h, 6) * (card.querySelector('#snakeCanvas,#pongCanvas,#platformCanvas,#game2048,#minesBoard,#sudokuBoard,#targetArea,#brkCanvas,#flpCanvas,#c4Board,#loBoard,#dashCanvas,#arrowCanvas,#hmCanvas,#tetCanvas,#stackCanvas,#molesBoard,#slideBoard') ? 0.85 : 0.35));
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  function fitAll() { document.querySelectorAll('.card').forEach(fit); }
+
+  const ro = new ResizeObserver(() => fitAll());
+  document.querySelectorAll('.card .fs-stage').forEach(st => ro.observe(st));
+
+  document.addEventListener('fullscreenchange', () => setTimeout(fitAll, 50));
+  window.addEventListener('resize', fitAll);
+  new MutationObserver(fitAll).observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
+  document.addEventListener('click', e => { if (e.target.closest('.fullscreen-game-btn')) setTimeout(fitAll, 120); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setTimeout(fitAll, 50); });
+})();
+</script>
+
+<canvas id="starfield" aria-hidden="true"></canvas>
+<script>
+(() => {
+  const cv = document.getElementById('starfield'), ctx = cv.getContext('2d');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, stars = [];
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(W * H / 5000);
+    stars = Array.from({length: n}, () => {
+      const z = Math.random();               // depth: 0 far, 1 near
+      return {
+        x: Math.random() * W, y: Math.random() * H,
+        r: 0.4 + z * 1.6,
+        v: 0.02 + z * 0.12,                   // drift speed
+        a: 0.3 + Math.random() * 0.7,
+        t: Math.random() * Math.PI * 2,
+        ts: 0.004 + Math.random() * 0.012
+      };
+    });
+  }
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (const st of stars) {
+      if (!reduce) {
+        st.y += st.v;
+        st.x += st.v * 0.25;
+        st.t += st.ts;
+        if (st.y > H + 2) { st.y = -2; st.x = Math.random() * W; }
+        if (st.x > W + 2) st.x = -2;
+      }
+      const tw = 0.6 + 0.4 * Math.sin(st.t);
+      ctx.globalAlpha = st.a * tw;
+      ctx.fillStyle = '#d8fff0';
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+  addEventListener('resize', resize);
+  resize(); frame();
+})();
+</script>
+<script>
+(() => {
+  const cv = document.getElementById('starfield');
+  function syncStars() {
+    const active = document.fullscreenElement || document.querySelector('.game-fallback-fullscreen');
+    if (active && active.classList.contains('card')) {
+      if (cv.parentNode !== active) active.insertBefore(cv, active.firstChild);
+    } else if (cv.parentNode !== document.body) {
+      document.body.insertBefore(cv, document.body.firstChild);
+    }
+  }
+  document.addEventListener('fullscreenchange', syncStars);
+  new MutationObserver(syncStars).observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
+  document.addEventListener('click', () => setTimeout(syncStars, 150));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setTimeout(syncStars, 50); });
+})();
+</script>
+<script>
+// Sudoku
+(() => {
+  const $ = id => document.getElementById(id);
+  const board = $('sudokuBoard'), card = board.closest('.card');
+  const CLUES = {easy: 40, medium: 32, hard: 26};
+  let diff = 'easy', solution = [], given = [], grid = [], sel = -1, wrong = new Set(), done = false;
+
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function cands(g, i) {
+    const r = Math.floor(i / 9), c = i % 9; let used = 0;
+    for (let k = 0; k < 9; k++) { used |= 1 << g[r * 9 + k]; used |= 1 << g[k * 9 + c]; }
+    const br = r - r % 3, bc = c - c % 3;
+    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) used |= 1 << g[(br + a) * 9 + bc + b];
+    const res = []; for (let d = 1; d <= 9; d++) if (!(used & (1 << d))) res.push(d); return res;
+  }
+  function pickCell(g) {
+    let best = -1, bc = null;
+    for (let i = 0; i < 81; i++) if (!g[i]) {
+      const c = cands(g, i);
+      if (c.length === 0) return {best: -2};
+      if (!bc || c.length < bc.length) { best = i; bc = c; if (c.length === 1) break; }
+    }
+    return {best, bc};
+  }
+  function fill(g) {
+    const {best, bc} = pickCell(g);
+    if (best === -2) return false; if (best < 0) return true;
+    for (const d of shuffle(bc)) { g[best] = d; if (fill(g)) return true; }
+    g[best] = 0; return false;
+  }
+  function count(g, limit) {
+    const {best, bc} = pickCell(g);
+    if (best === -2) return 0; if (best < 0) return 1;
+    let n = 0;
+    for (const d of bc) { g[best] = d; n += count(g, limit - n); if (n >= limit) break; }
+    g[best] = 0; return n;
+  }
+  function newPuzzle() {
+    const sol = Array(81).fill(0); fill(sol);
+    const g = sol.slice(); let clues = 81;
+    for (const i of shuffle([...Array(81).keys()])) {
+      if (clues <= CLUES[diff]) break;
+      const keep = g[i]; g[i] = 0;
+      if (count(g.slice(), 2) !== 1) g[i] = keep; else clues--;
+    }
+    solution = sol; grid = g.slice(); given = g.map(v => v !== 0);
+    sel = -1; wrong = new Set(); done = false;
+    $('sudokuResult').textContent = 'New ' + diff + ' puzzle (' + clues + ' clues). Pick a cell, then a number.';
+    render();
+  }
+  function conflicts() {
+    const bad = new Set();
+    const groups = [];
+    for (let k = 0; k < 9; k++) {
+      groups.push([...Array(9).keys()].map(c => k * 9 + c));
+      groups.push([...Array(9).keys()].map(r => r * 9 + k));
+      const br = Math.floor(k / 3) * 3, bc = (k % 3) * 3, box = [];
+      for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) box.push((br + a) * 9 + bc + b);
+      groups.push(box);
+    }
+    for (const grp of groups) {
+      const seen = {};
+      for (const i of grp) { const v = grid[i]; if (!v) continue; (seen[v] = seen[v] || []).push(i); }
+      for (const v in seen) if (seen[v].length > 1) seen[v].forEach(i => bad.add(i));
+    }
+    return bad;
+  }
+  function render() {
+    const cells = board.children, bad = conflicts(), sv = sel >= 0 ? grid[sel] : 0;
+    const sr = Math.floor(sel / 9), sc = sel % 9;
+    for (let i = 0; i < 81; i++) {
+      const r = Math.floor(i / 9), c = i % 9, b = cells[i];
+      let cls = (c % 3 === 2 && c < 8 ? 'br ' : '') + (r % 3 === 2 && r < 8 ? 'bb ' : '');
+      if (given[i]) cls += 'given ';
+      if (sel >= 0) {
+        if (i === sel) cls += 'sel ';
+        else if (sv && grid[i] === sv) cls += 'same ';
+        else if (r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3))) cls += 'rel ';
+      }
+      if (bad.has(i) && !given[i]) cls += 'bad ';
+      if (wrong.has(i)) cls += 'wrong ';
+      b.className = cls.trim(); b.textContent = grid[i] || '';
+    }
+  }
+  function setVal(v) {
+    if (done) return;
+    if (sel < 0) { $('sudokuResult').textContent = 'Select a cell first.'; return; }
+    if (given[sel]) { $('sudokuResult').textContent = 'That number is part of the puzzle.'; return; }
+    grid[sel] = v; wrong.delete(sel); render();
+    if (grid.every((x, i) => x === solution[i])) { done = true; $('sudokuResult').textContent = '🏆 Solved! Great job!'; }
+    else $('sudokuResult').textContent = 'Keep going!';
+  }
+  // Build board and pad
+  for (let i = 0; i < 81; i++) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Row ' + (Math.floor(i / 9) + 1) + ' column ' + (i % 9 + 1)); b.onclick = () => { sel = i; render(); }; board.appendChild(b); }
+  const pad = $('sudokuPad');
+  for (let d = 1; d <= 9; d++) { const b = document.createElement('button'); b.type = 'button'; b.textContent = d; b.onclick = () => setVal(d); pad.appendChild(b); }
+  const er = document.createElement('button'); er.type = 'button'; er.textContent = '⌫'; er.setAttribute('aria-label', 'Erase'); er.onclick = () => setVal(0); pad.appendChild(er);
+
+  $('sudokuNew').onclick = newPuzzle;
+  $('sudokuDiff').onclick = e => {
+    const b = e.target.closest('button[data-diff]'); if (!b) return;
+    diff = b.dataset.diff;
+    document.querySelectorAll('#sudokuDiff button').forEach(x => x.classList.toggle('on', x === b));
+    newPuzzle();
+  };
+  $('sudokuCheck').onclick = () => {
+    if (done) return;
+    wrong = new Set(); grid.forEach((v, i) => { if (v && !given[i] && v !== solution[i]) wrong.add(i); });
+    $('sudokuResult').textContent = wrong.size ? wrong.size + ' cell' + (wrong.size > 1 ? 's are' : ' is') + ' wrong (outlined in red).' : 'All filled cells are correct so far ✔';
+    render();
+  };
+  $('sudokuHint').onclick = () => {
+    if (done) return;
+    let t = (sel >= 0 && !given[sel] && grid[sel] !== solution[sel]) ? sel : -1;
+    if (t < 0) { const open = []; grid.forEach((v, i) => { if (!given[i] && v !== solution[i]) open.push(i); }); if (!open.length) return; t = open[Math.floor(Math.random() * open.length)]; }
+    sel = t; setVal(solution[t]);
+    if (!done) $('sudokuResult').textContent = '💡 A cell was filled for you.';
+  };
+  // Keyboard: digits, Backspace/Delete, arrows (only while Sudoku has focus or is fullscreen)
+  const active = () => card.contains(document.activeElement) || document.fullscreenElement === card || card.classList.contains('game-fallback-fullscreen');
+  window.addEventListener('keydown', e => {
+    if (!active()) return;
+    const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA')) return;
+    const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+    if (e.key >= '1' && e.key <= '9') { setVal(+e.key); stop(); }
+    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { setVal(0); stop(); }
+    else if (e.key.startsWith('Arrow')) {
+      if (sel < 0) sel = 40;
+      else {
+        let r = Math.floor(sel / 9), c = sel % 9;
+        if (e.key === 'ArrowUp') r = Math.max(0, r - 1); if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
+        if (e.key === 'ArrowLeft') c = Math.max(0, c - 1); if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
+        sel = r * 9 + c;
+      }
+      render(); board.children[sel].focus(); stop();
+    }
+  }, true);
+  newPuzzle();
+})();
+</script>
+<script>
+// Rules ("?") buttons — shown only in normal (non-fullscreen) mode
+(() => {
+  const RULES = {"Guess the Number": ["The computer picks a secret number from 1 to 100.", "Type your guess and press Check.", "You'll be told if the secret number is higher or lower.", "Find it in as few attempts as possible.", "💡 Hint narrows down the range of the secret number."], "Tic-Tac-Toe": ["You play X, the computer plays O.", "Click an empty square to place your X.", "Get three in a row — horizontal, vertical or diagonal — before the computer does.", "If the board fills up with no line, it's a draw.", "💡 Hint highlights the best square for your next move."], "Rock, Paper, Scissors": ["Rock beats Scissors, Scissors beats Paper, Paper beats Rock.", "Pick a gesture — the computer picks one too.", "The same gesture is a draw.", "The score for you and the computer is tracked across rounds."], "Reaction Test": ["Click the pad to start, then wait.", "When the pad turns green, click as fast as you can.", "Clicking before green is a false start.", "Your time is shown in ms and your best result is saved."], "Quick Math": ["Solve the math problem shown.", "Type your answer and press Submit.", "Each correct answer adds to your score.", "Press New problem to get another one.", "💡 Hint tells you if the answer is even or odd and roughly where it is."], "Hit the Target": ["Press Start game — you have 15 seconds.", "Click the target every time it jumps to a new spot.", "Each hit gives 1 point.", "Try to beat your own record."], "Find the Pairs": ["Flip two cards at a time.", "If the symbols match, the pair stays open.", "If not, both cards flip back — remember where they were.", "Find all pairs in as few moves as possible.", "💡 Hint briefly highlights two cards that match."], "Crack the Code": ["The computer has a secret 3-digit code with all different digits.", "Enter 3 different digits and press the button.", "The hint tells you how many digits are in the right place and how many digits from the code you've found.", "Crack the code in as few attempts as possible.", "💡 Hint reveals one digit and its position."], "Repeat the Sequence": ["Press Start and watch the colors flash.", "Repeat the same order by clicking the colors.", "Each round adds one more color to the sequence.", "One mistake ends the game.", "💡 Hint replays the current sequence from the start."], "Snake": ["Steer with the keyboard arrows or the on-screen buttons.", "Eat the food to grow longer and score points.", "The game is over if you hit a wall or your own tail.", "Press Start / restart to play again."], "2048": ["Use the arrow keys (or swipe / buttons) to slide all tiles.", "When two tiles with the same number touch, they merge into one.", "Keep merging to reach the 2048 tile.", "The game ends when no more moves are possible.", "💡 Hint suggests a good direction to move."], "Ping Pong": ["You are the green paddle on the left, the computer is on the right.", "Press Start, then move with the ↑ / ↓ arrows, W / S, the buttons, or by dragging on the field.", "Hit the ball back — don't let it get past you.", "The first to 5 points wins."], "Minesweeper": ["There are 10 bombs hidden on the board.", "Click a cell to open it. A number shows how many of its neighbouring cells contain bombs.", "Use the numbers to work out where the bombs are.", "Open all safe cells to win — opening a bomb loses the game.", "💡 Hint opens one safe cell for you (3 per game)."], "Platformer": ["Move with the ← / → arrows (or buttons).", "Jump with ↑ or the space bar.", "Reach the golden flag to finish the level.", "Falling off restarts the level. There are 10 levels, played in random order."], "Sudoku": ["Fill the grid so every row, column and 3×3 box contains the digits 1–9 exactly once.", "Click a cell, then use the number pad or your keyboard. Arrow keys move the selection.", "Check outlines wrong numbers in red; Hint fills one cell for you.", "Pick Easy, Medium or Hard for a new puzzle."], "Brick Breaker": ["Press Start, then move the paddle with the mouse, your finger, or the ← / → arrows.", "Bounce the ball up to break the bricks — every brick gives 1 point.", "Hitting the ball with the edge of the paddle changes its angle.", "You have 3 lives. Clear all bricks to win."], "Flappy Flyer": ["Click the field, press Space / ↑, or tap Flap! to make the bird jump.", "The bird falls on its own, so keep flapping to stay in the air.", "Fly through the gaps between the green pipes — each pair passed gives 1 point.", "Hitting a pipe, the floor or the ceiling ends the game."], "Four in a Row": ["You play green, the computer plays purple. You move first.", "Click any column to drop your disc to the lowest free spot.", "The first to connect four discs in a line — horizontal, vertical or diagonal — wins.", "If the board fills up with no line, it's a draw.", "💡 Hint suggests the best column to play."], "Lights Out": ["Click a light to toggle it and its four neighbours (up, down, left, right).", "The goal is to turn all the lights off.", "Every puzzle can be solved — try to use as few moves as possible.", "Press New puzzle for a different layout.", "💡 Hint highlights a light that is part of a solution."], "Hangman": ["The computer picks a secret word — each underscore is one letter.", "Click letters on the screen (or type on your keyboard) to guess.", "A correct letter appears in the word; a wrong one adds a part to the hangman.", "Find the word before you make 6 mistakes.", "💡 Hint reveals one letter (2 per word)."], "Cube Dash": ["Your cube runs forward on its own — you only control the jump.", "Click the field, press Space / ↑ or tap Jump! (hold it to keep jumping).", "Jump over the spikes. Blocks can be jumped over or landed on, but hitting their side is a crash.", "The level never ends: every ~1600 px a new level starts with new colors and more speed. Beat your best score!"], "Arrow Dash": ["Your arrow flies forward on its own and always moves diagonally.", "Hold the field, Space / ↑ or the button to go up; let go to go down.", "Stay inside the tunnel — touching a wall or a spike is a crash.", "The tunnel never ends: every ~1500 px a new level starts with new colors, a narrower and twistier tunnel, and more speed."], "Tetris": ["Pieces fall from the top — move them with ◀ / ▶ (or the arrow keys).", "Rotate with ↻ or ↑, soft drop with ▼ or ↓, hard drop with Drop or Space.", "Fill a whole row with no gaps to clear it and score points.", "Every 10 lines the level goes up and the pieces fall faster. The game ends when the stack reaches the top."], "Whack-a-Mole": ["Press Start — you have 30 seconds.", "A mole pops out of a random hole. Click or tap it before it hides.", "Each hit gives 1 point. The moles get a bit quicker as you score.", "Try to beat your best result."], "Stack Tower": ["A block slides left and right above the tower.", "Click the field, press Space or tap Drop! to drop it on the tower.", "Only the part that overlaps the block below stays — the tower gets narrower.", "A near-perfect drop keeps the full width. The game ends when a block misses completely."], "Sliding Puzzle": ["Click a tile next to the empty space to slide it.", "Put the numbers in order from 1 upwards, with the empty space in the bottom-right corner.", "Choose 3×3 (easy) or 4×4 (harder).", "Every puzzle can be solved — try to use as few moves as possible."]};
+  document.querySelectorAll('.card').forEach(card => {
+    const h2 = card.querySelector('h2'); if (!h2) return;
+    const title = h2.textContent.trim(), rules = RULES[title]; if (!rules) return;
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'rules-btn'; btn.textContent = '?';
+    btn.setAttribute('aria-label', 'Rules: ' + title); btn.title = 'Rules';
+    const panel = document.createElement('div');
+    panel.className = 'rules-panel'; panel.setAttribute('role', 'dialog');
+    const h3 = document.createElement('h3'); h3.textContent = title + ' — rules';
+    const ul = document.createElement('ul');
+    rules.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'rules-close'; close.textContent = '✕'; close.setAttribute('aria-label', 'Close rules');
+    panel.append(close, h3, ul);
+    const toggle = open => panel.classList.toggle('open', open);
+    btn.onclick = () => toggle(true);
+    close.onclick = () => toggle(false);
+    card.append(btn, panel);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.rules-panel.open').forEach(p => p.classList.remove('open')); });
+})();
+</script>
+<script>
+// Top navigation: pick a game from the menu
+(() => {
+  const btn = document.getElementById('navGames'), menu = document.getElementById('navMenu');
+  const list = document.getElementById('navList'), search = document.getElementById('navSearch');
+  const items = [];
+  document.querySelectorAll('.card').forEach((card, i) => {
+    const h2 = card.querySelector('h2'); if (!h2) return;
+    card.id = card.id || 'game-' + (i + 1);
+    const em = card.querySelector('.emoji'), title = h2.textContent.trim();
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-item';
+    const e = document.createElement('span'); e.className = 'e'; e.textContent = em ? em.textContent : '🎮';
+    const t = document.createElement('span'); t.textContent = title;
+    b.append(e, t);
+    b.onclick = () => {
+      setOpen(false);
+      card.scrollIntoView({behavior: 'smooth', block: 'center'});
+      card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 1300);
+    };
+    list.appendChild(b); items.push({b, title: title.toLowerCase()});
+  });
+  const empty = document.createElement('div'); empty.className = 'nav-empty'; empty.textContent = 'No games found'; empty.hidden = true; list.appendChild(empty);
+  function filter() {
+    const q = search.value.trim().toLowerCase(); let n = 0;
+    items.forEach(it => { const show = !q || it.title.includes(q); it.b.style.display = show ? '' : 'none'; if (show) n++; });
+    empty.hidden = n > 0;
+  }
+  function setOpen(o) {
+    menu.classList.toggle('open', o); btn.setAttribute('aria-expanded', o);
+    btn.textContent = o ? '🎮 Games ▴' : '🎮 Games ▾';
+    if (o) { search.value = ''; filter(); setTimeout(() => search.focus(), 0); }
+  }
+  btn.onclick = e => { e.stopPropagation(); setOpen(!menu.classList.contains('open')); };
+  menu.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => setOpen(false));
+  search.addEventListener('input', filter);
+  search.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { const first = items.find(it => it.b.style.display !== 'none'); if (first) first.b.click(); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+})();
+</script>
+<script>
+// More games: Brick Breaker, Flappy Flyer, Four in a Row, Lights Out, Hangman
+(() => {
+  const $ = id => document.getElementById(id);
+  const rnd = n => Math.floor(Math.random() * n);
+  const cardOf = el => el.closest('.card');
+  const H = {};
+  const isActive = card => card.contains(document.activeElement) || card.matches(':hover') || document.fullscreenElement === card || card.classList.contains('game-fallback-fullscreen');
+
+  /* ---------- Brick Breaker ---------- */
+  (() => {
+    const cv = $('brkCanvas'), c = cv.getContext('2d'), card = cardOf(cv), W = 320, H = 240;
+    const COLS = 8, ROWS = 5, BW = 36, BH = 14, PW = 60, PY = 224;
+    const COLORS = ['#ff6b6b', '#ffb86b', '#ffe66b', '#69f0ae', '#6bc5ff'];
+    let bricks = [], px = 130, ball, score = 0, lives = 3, run = false, raf = 0, keys = {l: false, r: false}, waitUntil = 0;
+    function serve() { ball = {x: 160, y: 150, vx: 0, vy: 0, wait: true, launchAt: performance.now() + 1000 + Math.random() * 500}; }
+    function init() {
+      bricks = []; for (let r = 0; r < ROWS; r++) for (let k = 0; k < COLS; k++) bricks.push({x: k * 40 + 2, y: 30 + r * (BH + 4), alive: true, col: COLORS[r]});
+      px = 130; score = 0; lives = 3; serve();
+    }
+    function draw() {
+      c.fillStyle = '#071015'; c.fillRect(0, 0, W, H);
+      bricks.forEach(b => { if (b.alive) { c.fillStyle = b.col; c.fillRect(b.x, b.y, BW, BH); } });
+      c.fillStyle = '#69f0ae'; c.fillRect(px, PY, PW, 8);
+      if (ball) { c.fillStyle = '#fff'; c.beginPath(); c.arc(ball.x, ball.y, 5, 0, Math.PI * 2); c.fill(); }
+      c.fillStyle = '#9bb0b6'; c.font = '12px Arial'; c.textAlign = 'left'; c.fillText('Score: ' + score, 8, 16);
+      c.textAlign = 'right'; c.fillText('Lives: ' + '♥'.repeat(lives), W - 8, 16); c.textAlign = 'start';
+    }
+    function end(msg) { run = false; $('brkResult').textContent = msg; $('brkStart').textContent = 'Play again'; draw(); }
+    function step() {
+      if (!run) return;
+      if (keys.l) px -= 3; if (keys.r) px += 3; px = Math.max(0, Math.min(W - PW, px));
+      if (ball.wait) {
+        if (performance.now() >= ball.launchAt) { ball.wait = false; ball.vx = 0; ball.vy = 1.75; $('brkResult').textContent = 'Break all the bricks!'; }
+        else { draw(); raf = requestAnimationFrame(step); return; }
+      }
+      ball.x += ball.vx; ball.y += ball.vy;
+      if (ball.x < 5) { ball.x = 5; ball.vx = Math.abs(ball.vx); }
+      if (ball.x > W - 5) { ball.x = W - 5; ball.vx = -Math.abs(ball.vx); }
+      if (ball.y < 5) { ball.y = 5; ball.vy = Math.abs(ball.vy); }
+      if (ball.vy > 0 && ball.y + 5 >= PY && ball.y + 5 <= PY + 10 && ball.x >= px - 3 && ball.x <= px + PW + 3) {
+        ball.vy = -Math.abs(ball.vy); ball.vx = ((ball.x - (px + PW / 2)) / (PW / 2)) * 2.3; if (Math.abs(ball.vx) < .35) ball.vx = (Math.random() < .5 ? -1 : 1) * .35; ball.y = PY - 5;
+      }
+      for (const b of bricks) if (b.alive && ball.x + 5 > b.x && ball.x - 5 < b.x + BW && ball.y + 5 > b.y && ball.y - 5 < b.y + BH) { b.alive = false; score++; ball.vy = -ball.vy; break; }
+      if (bricks.every(b => !b.alive)) { end('🏆 You cleared all the bricks! Score: ' + score); return; }
+      if (ball.y > H + 10) { lives--; if (lives <= 0) { end('Game over! Score: ' + score); return; } serve(); $('brkResult').textContent = 'Ball lost! Next ball coming…'; }
+      draw(); raf = requestAnimationFrame(step);
+    }
+    $('brkStart').onclick = () => { cancelAnimationFrame(raf); init(); run = true; $('brkStart').textContent = 'Restart'; $('brkResult').textContent = 'Break all the bricks!'; step(); };
+    cv.style.touchAction = 'none';
+    cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); px = Math.max(0, Math.min(W - PW, (e.clientX - r.left) * W / r.width - PW / 2)); if (!run) draw(); });
+    window.addEventListener('keydown', e => { if (run && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && isActive(card)) { keys[e.key === 'ArrowLeft' ? 'l' : 'r'] = true; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+    window.addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.l = false; if (e.key === 'ArrowRight') keys.r = false; }, true);
+    init(); draw();
+  })();
+
+  /* ---------- Flappy Flyer ---------- */
+  (() => {
+    const cv = $('flpCanvas'), c = cv.getContext('2d'), card = cardOf(cv), W = 320, H = 300;
+    const GAP = 95, PWD = 46, SPACING = 175, SPEED = 1.2, BX = 70, R = 11;
+    let bird, pipes, score = 0, best = 0, state = 'idle', raf = 0, overAt = 0;
+    const newPipe = () => ({x: W + 20, top: 40 + rnd(H - GAP - 80), passed: false});
+    function reset() { bird = {y: H / 2, vy: 0}; pipes = []; score = 0; state = 'idle'; draw(); }
+    function draw() {
+      c.fillStyle = '#071015'; c.fillRect(0, 0, W, H);
+      c.fillStyle = '#2e8f5f';
+      pipes.forEach(p => { c.fillRect(p.x, 0, PWD, p.top); c.fillRect(p.x, p.top + GAP, PWD, H - p.top - GAP); });
+      c.fillStyle = '#ffd166'; c.beginPath(); c.arc(BX, bird.y, R, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#071015'; c.beginPath(); c.arc(BX + 4, bird.y - 3, 2.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#ff9f43'; c.fillRect(BX + 8, bird.y, 8, 4);
+      c.fillStyle = '#eefaf6'; c.font = '700 26px Arial'; c.textAlign = 'center'; c.fillText(String(score), W / 2, 36);
+      c.font = '14px Arial'; c.fillStyle = '#9bb0b6';
+      if (state === 'idle') c.fillText('Click or press Space to start', W / 2, H - 20);
+      if (state === 'over') c.fillText('Crashed! Click to try again', W / 2, H - 20);
+      c.textAlign = 'start';
+    }
+    function over() {
+      state = 'over'; overAt = performance.now(); best = Math.max(best, score);
+      $('flpResult').textContent = 'Score: ' + score + ' · Best: ' + best; draw();
+    }
+    function step() {
+      if (state !== 'run') return;
+      bird.vy += .1125; bird.y += bird.vy;
+      pipes.forEach(p => p.x -= SPEED);
+      if (pipes[pipes.length - 1].x < W - SPACING) pipes.push(newPipe());
+      pipes = pipes.filter(p => p.x > -PWD);
+      if (bird.y - R < 0 || bird.y + R > H) { over(); return; }
+      for (const p of pipes) {
+        if (BX + R > p.x && BX - R < p.x + PWD && (bird.y - R < p.top || bird.y + R > p.top + GAP)) { over(); return; }
+        if (!p.passed && p.x + PWD < BX - R) { p.passed = true; score++; $('flpResult').textContent = 'Score: ' + score; }
+      }
+      draw(); raf = requestAnimationFrame(step);
+    }
+    function flap() {
+      if (state === 'over') { if (performance.now() - overAt < 600) return; reset(); }
+      if (state === 'idle') { state = 'run'; pipes = [newPipe()]; $('flpResult').textContent = 'Score: 0'; cancelAnimationFrame(raf); raf = requestAnimationFrame(step); }
+      bird.vy = -3.5;
+    }
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); flap(); });
+    $('flpBtn').onclick = flap;
+    window.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) {
+        const t = e.target; if (t && t.tagName === 'BUTTON' && e.key === ' ') { /* button handles its own click */ }
+        if (!e.repeat) flap();
+        if (!(t && t.tagName === 'BUTTON' && e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); }
+        else { e.preventDefault(); e.stopImmediatePropagation(); }
+      }
+    }, true);
+    reset();
+  })();
+
+  /* ---------- Four in a Row ---------- */
+  (() => {
+    const boardEl = $('c4Board'), res = $('c4Result'), R = 6, C = 7;
+    let b, turn, over, busy = false, cells = [];
+    for (let r = 0; r < R; r++) for (let k = 0; k < C; k++) {
+      const el = document.createElement('button'); el.type = 'button'; el.setAttribute('aria-label', 'Column ' + (k + 1));
+      el.onclick = () => drop(k); boardEl.appendChild(el); cells.push(el);
+    }
+    const lowest = k => { for (let r = R - 1; r >= 0; r--) if (!b[r][k]) return r; return -1; };
+    function checkWin(p) {
+      for (let r = 0; r < R; r++) for (let k = 0; k < C; k++) if (b[r][k] === p) for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+        const line = [];
+        for (let i = 0; i < 4; i++) { const rr = r + dr * i, cc = k + dc * i; if (rr < 0 || rr >= R || cc < 0 || cc >= C || b[rr][cc] !== p) break; line.push(rr * C + cc); }
+        if (line.length === 4) return line;
+      }
+      return null;
+    }
+    function render(win) {
+      cells.forEach((el, i) => { const v = b[Math.floor(i / C)][i % C]; el.className = (v === 1 ? 'p1' : v === 2 ? 'p2' : '') + (win && win.includes(i) ? ' win' : ''); });
+    }
+    function after(p) {
+      const w = checkWin(p); render(w);
+      if (w) { over = true; res.textContent = p === 1 ? '🎉 You win!' : 'Computer wins!'; return; }
+      if (b[0].every(v => v)) { over = true; res.textContent = 'Draw!'; return; }
+      turn = 3 - p;
+      if (turn === 2) { busy = true; res.textContent = 'Computer is thinking…'; setTimeout(cpu, 800); } else res.textContent = 'Your move — green.';
+    }
+    function drop(k) { if (over || busy || turn !== 1) return; const r = lowest(k); if (r < 0) return; b[r][k] = 1; after(1); }
+    function wins(k, p) { const r = lowest(k); b[r][k] = p; const w = !!checkWin(p); b[r][k] = 0; return w; }
+    function cpu() {
+      busy = false;
+      const cols = [...Array(C).keys()].filter(k => lowest(k) >= 0);
+      let pick = cols.find(k => wins(k, 2));
+      if (pick === undefined) pick = cols.find(k => wins(k, 1));
+      if (pick === undefined) {
+        const safe = cols.filter(k => { const r = lowest(k); if (r <= 0) return true; b[r][k] = 2; const bad = wins(k, 1); b[r][k] = 0; return !bad; });
+        const pool = safe.length ? safe : cols;
+        pick = pool.map(k => [Math.abs(3 - k) + Math.random() * 1.5, k]).sort((x, y) => x[0] - y[0])[0][1];
+      }
+      b[lowest(pick)][pick] = 2; after(2);
+    }
+    function reset() { b = Array.from({length: R}, () => Array(C).fill(0)); turn = 1; over = false; busy = false; res.textContent = 'Your move — green.'; render(null); }
+    H.c4 = () => {
+      if (over || busy || turn !== 1) return null;
+      const cols = [...Array(C).keys()].filter(k => lowest(k) >= 0);
+      let pick = cols.find(k => wins(k, 1)), why = 'This wins the game!';
+      if (pick === undefined) { pick = cols.find(k => wins(k, 2)); why = 'This blocks the computer.'; }
+      if (pick === undefined) {
+        const safe = cols.filter(k => { const r = lowest(k); if (r <= 0) return true; b[r][k] = 1; const bad = wins(k, 2); b[r][k] = 0; return !bad; });
+        const pool = safe.length ? safe : cols;
+        pick = pool.map(k => [Math.abs(3 - k) + Math.random(), k]).sort((x, y) => x[0] - y[0])[0][1]; why = 'A solid move.';
+      }
+      const el = cells[lowest(pick) * C + pick]; el.style.boxShadow = '0 0 0 3px #ffd166'; setTimeout(() => el.style.boxShadow = '', 2000);
+      return '💡 Try column ' + (pick + 1) + '. ' + why;
+    };
+    $('c4New').onclick = reset; reset();
+  })();
+
+  /* ---------- Lights Out ---------- */
+  (() => {
+    const boardEl = $('loBoard'), res = $('loResult'), N = 5; let g = [], moves = 0, solved = false; const cells = [];
+    for (let i = 0; i < N * N; i++) { const el = document.createElement('button'); el.type = 'button'; el.setAttribute('aria-label', 'Light ' + (i + 1)); el.onclick = () => { if (solved) return; press(i); moves++; render(); if (g.every(v => !v)) { solved = true; res.textContent = '🎉 Solved in ' + moves + ' moves!'; } else res.textContent = 'Moves: ' + moves; }; boardEl.appendChild(el); cells.push(el); }
+    function press(i) {
+      const r = Math.floor(i / N), k = i % N;
+      [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dr, dc]) => { const rr = r + dr, cc = k + dc; if (rr >= 0 && rr < N && cc >= 0 && cc < N) g[rr * N + cc] ^= 1; });
+    }
+    function render() { cells.forEach((el, i) => { el.className = g[i] ? 'on' : ''; el.style.outline = ''; }); }
+    function reset() {
+      do { g = Array(N * N).fill(0); const presses = 8 + rnd(8); for (let n = 0; n < presses; n++) press(rnd(N * N)); } while (g.every(v => !v));
+      moves = 0; solved = false; res.textContent = 'Moves: 0'; render();
+    }
+    H.lo = () => {
+      if (solved) return null;
+      const n = N * N, M = [];
+      for (let i = 0; i < n; i++) { const row = Array(n + 1).fill(0), r = Math.floor(i / N), c = i % N; row[i] = 1; if (r > 0) row[i - N] = 1; if (r < N - 1) row[i + N] = 1; if (c > 0) row[i - 1] = 1; if (c < N - 1) row[i + 1] = 1; row[n] = g[i]; M.push(row); }
+      const piv = []; let rr = 0;
+      for (let col = 0; col < n && rr < n; col++) {
+        let k = rr; while (k < n && !M[k][col]) k++; if (k === n) continue;
+        [M[rr], M[k]] = [M[k], M[rr]];
+        for (let i = 0; i < n; i++) if (i !== rr && M[i][col]) for (let j = col; j <= n; j++) M[i][j] ^= M[rr][j];
+        piv.push(col); rr++;
+      }
+      // Solutions form a coset of the null space — pick the one with the fewest presses so that every hint gets you closer.
+      const free = [...Array(n).keys()].filter(c => !piv.includes(c)); let x = null, bestW = 1e9;
+      for (let mask = 0; mask < (1 << free.length); mask++) {
+        const cand = Array(n).fill(0); piv.forEach((col, i) => cand[col] = M[i][n]);
+        free.forEach((f, bi) => { if (mask >> bi & 1) { cand[f] ^= 1; piv.forEach((col, i) => cand[col] ^= M[i][f]); } });
+        const w = cand.reduce((u, v) => u + v, 0); if (w < bestW) { bestW = w; x = cand; }
+      }
+      const ids = x.map((v, i) => v ? i : -1).filter(i => i >= 0); if (!ids.length) return null;
+      const j = ids[rnd(ids.length)], el = cells[j]; el.style.outline = '3px solid #ffd166'; setTimeout(() => el.style.outline = '', 2000);
+      return '💡 Try the highlighted light.';
+    };
+    $('loNew').onclick = reset; reset();
+  })();
+
+  /* ---------- Hangman ---------- */
+  (() => {
+    const cv = $('hmCanvas'), c = cv.getContext('2d'), card = cardOf(cv), res = $('hmResult'), wordEl = $('hmWord'), keysEl = $('hmKeys');
+    const WORDS = ['planet', 'guitar', 'rocket', 'jungle', 'pirate', 'castle', 'dragon', 'puzzle', 'camera', 'window', 'bridge', 'pencil', 'island', 'magnet', 'forest', 'silver', 'garden', 'wizard', 'laptop', 'cactus', 'tiger', 'robot', 'pizza', 'ocean', 'piano', 'tower', 'storm', 'candle', 'mirror', 'cookie', 'rainbow', 'volcano', 'dolphin', 'penguin', 'compass'];
+    const MAX = 6; let word = '', guessed = new Set(), wrong = 0, finished = false; const btns = {};
+    'abcdefghijklmnopqrstuvwxyz'.split('').forEach(ch => { const b = document.createElement('button'); b.type = 'button'; b.textContent = ch.toUpperCase(); b.onclick = () => guess(ch); keysEl.appendChild(b); btns[ch] = b; });
+    function draw() {
+      c.fillStyle = '#071015'; c.fillRect(0, 0, 320, 130); c.strokeStyle = '#9bb0b6'; c.lineWidth = 3; c.lineCap = 'round';
+      const L = (x1, y1, x2, y2) => { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
+      L(80, 120, 180, 120); L(110, 120, 110, 15); L(110, 15, 170, 15); L(170, 15, 170, 30);
+      c.strokeStyle = '#69f0ae';
+      if (wrong > 0) { c.beginPath(); c.arc(170, 40, 10, 0, Math.PI * 2); c.stroke(); }
+      if (wrong > 1) L(170, 50, 170, 85);
+      if (wrong > 2) L(170, 58, 154, 74);
+      if (wrong > 3) L(170, 58, 186, 74);
+      if (wrong > 4) L(170, 85, 156, 108);
+      if (wrong > 5) L(170, 85, 184, 108);
+    }
+    function show() { wordEl.textContent = word.split('').map(ch => guessed.has(ch) || (finished && wrong >= MAX) ? ch.toUpperCase() : '_').join(' '); draw(); }
+    function guess(ch) {
+      if (finished || guessed.has(ch)) return;
+      guessed.add(ch);
+      if (word.includes(ch)) btns[ch].className = 'ok'; else { wrong++; btns[ch].className = 'no'; }
+      btns[ch].setAttribute('aria-disabled', 'true');
+      if (word.split('').every(x => guessed.has(x))) { finished = true; res.textContent = '🎉 You got it! The word is ' + word.toUpperCase() + '.'; }
+      else if (wrong >= MAX) { finished = true; res.textContent = 'Game over! The word was ' + word.toUpperCase() + '.'; }
+      else res.textContent = 'Mistakes: ' + wrong + ' of ' + MAX;
+      show();
+    }
+    function reset() {
+      word = WORDS[rnd(WORDS.length)]; guessed = new Set(); wrong = 0; finished = false;
+      Object.values(btns).forEach(b => { b.className = ''; b.removeAttribute('aria-disabled'); });
+      res.textContent = 'You can make ' + MAX + ' mistakes.'; show();
+    }
+    window.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey || e.altKey || !/^[a-zA-Z]$/.test(e.key) || !isActive(card)) return;
+      const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      guess(e.key.toLowerCase()); e.preventDefault(); e.stopImmediatePropagation();
+    }, true);
+    let hmHints = 0, hmWord = '';
+    H.hm = () => {
+      if (finished) return null;
+      if (hmWord !== word) { hmWord = word; hmHints = 0; }
+      if (hmHints >= 2) return 'No more hints for this word.';
+      const left = [...new Set(word.split(''))].filter(ch => !guessed.has(ch)); if (!left.length) return null;
+      hmHints++; guess(left[rnd(left.length)]);
+      return finished ? null : '💡 A letter was revealed. Hints left: ' + (2 - hmHints) + '.';
+    };
+    $('hmNew').onclick = reset; reset();
+  })();
+  /* ---------- Cube Dash (endless levels) ---------- */
+  (() => {
+    const cv = $('dashCanvas'), c = cv.getContext('2d'), card = cardOf(cv);
+    const W = 320, H = 200, GY = 160, S = 24, CX = 60, K = .7, GRAV = .55 * K * K, JUMP = -9 * K, LEVEL_LEN = 1600;
+    let state = 'idle', raf = 0, obs = [], spawnX = 0, speed = 2.4 * .7, level = 1, dist = 0, levelDist = 0;
+    let y = GY - S, vy = 0, onGround = true, ang = 0, holding = false, best = 0, diedAt = 0, banner = 0;
+    const spd = () => Math.min(4.2, 2.4 + .2 * (level - 1)) * K;
+    const score = () => Math.floor(dist / 10);
+    function reset() { obs = []; spawnX = W + 120; level = 1; dist = 0; levelDist = 0; speed = spd(); y = GY - S; vy = 0; onGround = true; ang = 0; banner = 0; }
+    function addPattern() {
+      const types = ['spikes', 'block']; if (level >= 2) types.push('stairs', 'bridge');
+      const t = types[rnd(types.length)]; let w = 0;
+      if (t === 'spikes') { const n = 1 + rnd(speed / K >= 3.1 ? 3 : 2); for (let i = 0; i < n; i++) obs.push({t: 's', x: spawnX + i * 20}); w = n * 20; }
+      else if (t === 'block') { const bw = 24 + 24 * rnd(2), bh = 24 + 24 * rnd(2); obs.push({t: 'b', x: spawnX, w: bw, h: bh}); w = bw; }
+      else if (t === 'stairs') { obs.push({t: 'b', x: spawnX, w: 40, h: 24}, {t: 'b', x: spawnX + 40, w: 40, h: 48}); w = 80; }
+      else { obs.push({t: 'b', x: spawnX, w: 40, h: 48}, {t: 's', x: spawnX + 40}, {t: 's', x: spawnX + 60}, {t: 'b', x: spawnX + 80, w: 64, h: 48}); w = 144; }
+      spawnX += w + 130 + rnd(80) + speed / K * 20;
+    }
+    function die() {
+      state = 'dead'; diedAt = performance.now(); best = Math.max(best, score());
+      $('dashResult').textContent = '💥 Crashed on level ' + level + '! Score: ' + score() + ' · Best: ' + best;
+    }
+    function step() {
+      if (state !== 'run') return;
+      if (holding && onGround) { vy = JUMP; onGround = false; }
+      speed = spd();
+      obs.forEach(o => o.x -= speed); spawnX -= speed; dist += speed; levelDist += speed;
+      if (levelDist >= LEVEL_LEN) { levelDist = 0; level++; banner = 90; }
+      while (spawnX < W + 40) addPattern();
+      obs = obs.filter(o => o.x + (o.w || 20) > -10);
+      const oldBottom = y + S; vy += GRAV; y += vy;
+      let landed = false, dead = false; const cl = CX, cr = CX + S;
+      for (const o of obs) {
+        if (o.t === 'b') {
+          const bt = GY - o.h;
+          if (cr > o.x && cl < o.x + o.w) { if (oldBottom <= bt + 1 && vy >= 0 && y + S >= bt) { y = bt - S; vy = 0; landed = true; } else if (y + S > bt + 1) dead = true; }
+        } else { const sx = o.x + 5, st = GY - 14; if (cr > sx && cl < sx + 10 && y + S > st) dead = true; }
+      }
+      if (!landed && y + S >= GY) { y = GY - S; vy = 0; landed = true; }
+      if (landed && !onGround) ang = Math.round(ang / (Math.PI / 2)) * (Math.PI / 2);
+      onGround = landed; if (!onGround) ang += Math.PI / 33 * K;
+      if (banner > 0) banner--;
+      if (dead) die();
+    }
+    function draw() {
+      const hue = (level * 57 + 200) % 360;
+      c.fillStyle = 'hsl(' + hue + ',45%,12%)'; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'hsla(' + hue + ',70%,60%,.12)'; c.lineWidth = 1;
+      const off = (dist * .5) % 40; for (let x = -off; x < W; x += 40) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, GY); c.stroke(); }
+      c.fillStyle = 'hsl(' + hue + ',55%,22%)'; c.fillRect(0, GY, W, H - GY);
+      c.fillStyle = 'hsl(' + hue + ',90%,65%)'; c.fillRect(0, GY, W, 3);
+      for (const o of obs) {
+        if (o.t === 'b') {
+          c.fillStyle = 'hsl(' + hue + ',50%,16%)'; c.fillRect(o.x, GY - o.h, o.w, o.h);
+          c.strokeStyle = 'hsl(' + hue + ',90%,65%)'; c.lineWidth = 2; c.strokeRect(o.x + 1, GY - o.h + 1, o.w - 2, o.h - 2);
+        } else {
+          c.fillStyle = '#ff5c7a'; c.beginPath(); c.moveTo(o.x, GY); c.lineTo(o.x + 10, GY - 20); c.lineTo(o.x + 20, GY); c.closePath(); c.fill();
+        }
+      }
+      c.save(); c.translate(CX + S / 2, y + S / 2); c.rotate(ang);
+      c.fillStyle = state === 'dead' ? '#ff6b6b' : '#5ec8ff'; c.fillRect(-S / 2, -S / 2, S, S);
+      c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(-S / 2 + 1, -S / 2 + 1, S - 2, S - 2);
+      c.fillStyle = '#071015'; c.fillRect(-7, -6, 5, 5); c.fillRect(3, -6, 5, 5); c.fillRect(-7, 4, 15, 3);
+      c.restore();
+      c.fillStyle = '#eefaf6'; c.font = '700 13px Arial'; c.textAlign = 'left'; c.fillText('Level ' + level, 8, 18);
+      c.textAlign = 'right'; c.fillText('Score ' + score(), W - 8, 18);
+      c.textAlign = 'center';
+      if (banner > 0) { c.globalAlpha = Math.min(1, banner / 30); c.font = '800 28px Arial'; c.fillText('LEVEL ' + level, W / 2, 80); c.globalAlpha = 1; }
+      c.font = '14px Arial'; c.fillStyle = '#d6e7e2';
+      if (state === 'idle') c.fillText('Click or press Space to start', W / 2, 60);
+      if (state === 'dead') c.fillText('Click to try again', W / 2, 60);
+      c.textAlign = 'start';
+    }
+    function loop() { step(); draw(); if (state === 'run') raf = requestAnimationFrame(loop); }
+    function press() {
+      holding = true;
+      if (state === 'dead') { if (performance.now() - diedAt < 500) return; reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+      else if (state === 'idle') { reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+    }
+    const release = () => { holding = false; };
+    cv.style.touchAction = 'none';
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
+    window.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) { if (!e.repeat) press(); else holding = true; e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    window.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'ArrowUp') release(); }, true);
+    reset(); draw();
+    /*DASH_DEBUG*/
+  })();
+
+  /* ---------- Arrow Dash (endless tunnel) ---------- */
+  (() => {
+    const cv = $('arrowCanvas'), c = cv.getContext('2d'), card = cardOf(cv);
+    const W = 320, H = 200, AX = 70, SEG = 48, LEVEL_LEN = 1500;
+    /*ARROW_LOGIC_START*/
+    let state = 'idle', raf = 0, pts = [], trail = [], spikes = [], nextSpikeX = 0, level = 1, dist = 0, levelDist = 0, y = H / 2, holding = false, best = 0, diedAt = 0, banner = 0, ang = Math.PI / 4;
+    const SPIKE_H = 14, SPIKE_HW = 7;
+    const spd = () => Math.min(3.1, 1.7 + .12 * (level - 1));
+    const gapFor = () => Math.max(86, 116 - 4 * (level - 1));
+    const deltaFor = () => Math.min(22, 14 + 2 * (level - 1));
+    const score = () => Math.floor(dist / 10);
+    function reset() {
+      pts = []; trail = []; spikes = []; nextSpikeX = W + 150; level = 1; dist = 0; levelDist = 0; y = H / 2; ang = Math.PI / 4; banner = 0;
+      const g = gapFor(); for (let x = -SEG; x <= W + SEG * 2; x += SEG) pts.push({x, top: H / 2 - g / 2, bot: H / 2 + g / 2});
+    }
+    function addPoint() {
+      const last = pts[pts.length - 1], g = gapFor(), lc = (last.top + last.bot) / 2;
+      let nc = lc + (Math.random() * 2 - 1) * deltaFor();
+      nc = Math.max(g / 2 + 12, Math.min(H - g / 2 - 12, nc));
+      pts.push({x: last.x + SEG, top: nc - g / 2, bot: nc + g / 2});
+    }
+    function edgeAt(x) {
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p = pts[i], q = pts[i + 1];
+        if (p.x <= x && x <= q.x) { const t = (x - p.x) / (q.x - p.x); return {top: p.top + (q.top - p.top) * t, bot: p.bot + (q.bot - p.bot) * t}; }
+      }
+      return {top: 0, bot: H};
+    }
+    function hitSpike(sp, px, py) {
+      const h = sp.side === 'top' ? py - sp.base : sp.base - py;
+      if (h < -3 || h > SPIKE_H + 3) return false;
+      const hw = h < 0 ? SPIKE_HW : Math.max(0, SPIKE_HW * (1 - h / SPIKE_H));
+      return Math.abs(px - sp.x) < hw + 3;
+    }
+    function die() {
+      state = 'dead'; diedAt = performance.now(); best = Math.max(best, score());
+      $('arrowResult').textContent = '💥 Crashed on level ' + level + '! Score: ' + score() + ' · Best: ' + best;
+    }
+    function step() {
+      if (state !== 'run') return;
+      const v = spd(); dist += v; levelDist += v;
+      if (levelDist >= LEVEL_LEN) { levelDist = 0; level++; banner = 90; }
+      pts.forEach(p => p.x -= v);
+      while (pts.length > 2 && pts[1].x < -SEG) pts.shift();
+      while (pts[pts.length - 1].x < W + SEG * 2) addPoint();
+      spikes.forEach(sp => sp.x -= v); nextSpikeX -= v;
+      spikes = spikes.filter(sp => sp.x > -20);
+      while (nextSpikeX < W + SEG) {
+        const side = Math.random() < .5 ? 'top' : 'bot', e = edgeAt(nextSpikeX);
+        spikes.push({x: nextSpikeX, side, base: side === 'top' ? e.top : e.bot});
+        nextSpikeX += Math.max(100, 190 - 8 * (level - 1)) + Math.random() * 60;
+      }
+      y += holding ? -v : v;
+      ang += ((holding ? -Math.PI / 4 : Math.PI / 4) - ang) * .35;
+      trail.forEach(t => t.x -= v); trail.push({x: AX, y});
+      while (trail.length && trail[0].x < AX - 90) trail.shift();
+      if (banner > 0) banner--;
+      for (const dx of [-5, 0, 8]) { const e = edgeAt(AX + dx); if (y - 3 < e.top || y + 3 > e.bot) { die(); return; } }
+      for (const sp of spikes) { if (Math.abs(sp.x - AX) < 20) for (const dx of [-5, 0, 8]) if (hitSpike(sp, AX + dx, y)) { die(); return; } }
+    }
+    /*ARROW_LOGIC_END*/
+    function draw() {
+      const hue = (level * 57 + 120) % 360;
+      c.fillStyle = 'hsl(' + hue + ',45%,12%)'; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'hsla(' + hue + ',70%,60%,.12)'; c.lineWidth = 1;
+      const off = (dist * .5) % 40; for (let x = -off; x < W; x += 40) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); }
+      c.fillStyle = 'hsl(' + hue + ',50%,20%)';
+      c.beginPath(); c.moveTo(pts[0].x, 0); pts.forEach(p => c.lineTo(p.x, p.top)); c.lineTo(pts[pts.length - 1].x, 0); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(pts[0].x, H); pts.forEach(p => c.lineTo(p.x, p.bot)); c.lineTo(pts[pts.length - 1].x, H); c.closePath(); c.fill();
+      c.strokeStyle = 'hsl(' + hue + ',90%,65%)'; c.lineWidth = 2;
+      c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p.x, p.top) : c.moveTo(p.x, p.top)); c.stroke();
+      c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p.x, p.bot) : c.moveTo(p.x, p.bot)); c.stroke();
+      c.fillStyle = '#ff5c7a';
+      for (const sp of spikes) { const d = sp.side === 'top' ? 1 : -1; c.beginPath(); c.moveTo(sp.x - SPIKE_HW, sp.base); c.lineTo(sp.x, sp.base + d * SPIKE_H); c.lineTo(sp.x + SPIKE_HW, sp.base); c.closePath(); c.fill(); }
+      if (trail.length > 1) { c.strokeStyle = state === 'dead' ? '#ff6b6b' : '#8de3ff'; c.lineWidth = 3; c.lineJoin = 'round'; c.beginPath(); trail.forEach((t, i) => i ? c.lineTo(t.x, t.y) : c.moveTo(t.x, t.y)); c.stroke(); }
+      c.save(); c.translate(AX, y); c.rotate(ang);
+      c.fillStyle = state === 'dead' ? '#ff6b6b' : '#fff'; c.beginPath(); c.moveTo(11, 0); c.lineTo(-7, -7); c.lineTo(-7, 7); c.closePath(); c.fill();
+      c.restore();
+      c.fillStyle = '#eefaf6'; c.font = '700 13px Arial'; c.textAlign = 'left'; c.fillText('Level ' + level, 8, 18);
+      c.textAlign = 'right'; c.fillText('Score ' + score(), W - 8, 18); c.textAlign = 'center';
+      if (banner > 0) { c.globalAlpha = Math.min(1, banner / 30); c.font = '800 28px Arial'; c.fillText('LEVEL ' + level, W / 2, 100); c.globalAlpha = 1; }
+      c.font = '14px Arial'; c.fillStyle = '#d6e7e2';
+      if (state === 'idle') c.fillText('Hold to go up — click to start', W / 2, H - 14);
+      if (state === 'dead') c.fillText('Click to try again', W / 2, H - 14);
+      c.textAlign = 'start';
+    }
+    function loop() { step(); draw(); if (state === 'run') raf = requestAnimationFrame(loop); }
+    function press() {
+      holding = true;
+      if (state === 'dead' && performance.now() - diedAt < 500) return;
+      if (state === 'dead' || state === 'idle') { reset(); state = 'run'; $('arrowResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+    }
+    const release = () => { holding = false; };
+    cv.style.touchAction = 'none';
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    $('arrowBtn').addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
+    window.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) { if (!e.repeat) press(); else holding = true; e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    window.addEventListener('keyup', e => { if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) release(); }, true);
+    reset(); draw();
+  })();
+
+  /* ---------- Tetris ---------- */
+  (() => {
+    const cv = $('tetCanvas'), c = cv.getContext('2d'), card = cardOf(cv);
+    const COLS = 10, ROWS = 20, CS = 16;
+    const SHAPES = {I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], O: [[1,1],[1,1]], T: [[0,1,0],[1,1,1],[0,0,0]], S: [[0,1,1],[1,1,0],[0,0,0]], Z: [[1,1,0],[0,1,1],[0,0,0]], J: [[1,0,0],[1,1,1],[0,0,0]], L: [[0,0,1],[1,1,1],[0,0,0]]};
+    const COLORS = {I: '#5ec8ff', O: '#ffd166', T: '#a9a2ff', S: '#69f0ae', Z: '#ff6b6b', J: '#6b8bff', L: '#ffb86b'};
+    let board = [], piece = null, nextType = null, score = 0, lines = 0, level = 1, over = false, running = false, timer = 0, bag = [];
+    const shuffled = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const take = () => { if (!bag.length) bag = shuffled(Object.keys(SHAPES)); return bag.pop(); };
+    const delay = () => Math.max(150, 900 - 70 * (level - 1));
+    const rotCW = m => m[0].map((_, i) => m.map(r => r[i]).reverse());
+    function collide(m, px, py) {
+      for (let r = 0; r < m.length; r++) for (let k = 0; k < m[r].length; k++) if (m[r][k]) {
+        const x = px + k, y = py + r;
+        if (x < 0 || x >= COLS || y >= ROWS) return true;
+        if (y >= 0 && board[y][x]) return true;
+      }
+      return false;
+    }
+    function spawn() {
+      const type = nextType || take(); nextType = take();
+      const m = SHAPES[type].map(r => r.slice());
+      piece = {type, m, x: Math.floor((COLS - m[0].length) / 2), y: type === 'I' ? -1 : 0};
+      if (collide(piece.m, piece.x, piece.y)) end();
+    }
+    function end() { over = true; running = false; clearTimeout(timer); $('tetResult').textContent = 'Game over! Score: ' + score + ' · Lines: ' + lines; $('tetStart').textContent = 'Play again'; draw(); }
+    function lock() {
+      piece.m.forEach((row, r) => row.forEach((v, k) => { if (v) { const y = piece.y + r, x = piece.x + k; if (y >= 0) board[y][x] = piece.type; } }));
+      let cleared = 0;
+      for (let r = ROWS - 1; r >= 0; r--) if (board[r].every(Boolean)) { board.splice(r, 1); board.unshift(Array(COLS).fill(0)); cleared++; r++; }
+      if (cleared) { score += [0, 100, 300, 500, 800][cleared] * level; lines += cleared; level = 1 + Math.floor(lines / 10); }
+      spawn();
+    }
+    function tick() {
+      if (!running) return;
+      if (!collide(piece.m, piece.x, piece.y + 1)) piece.y++; else lock();
+      draw(); if (running) timer = setTimeout(tick, delay());
+    }
+    const act = {
+      left() { if (!collide(piece.m, piece.x - 1, piece.y)) piece.x--; },
+      right() { if (!collide(piece.m, piece.x + 1, piece.y)) piece.x++; },
+      rot() { const m = rotCW(piece.m); for (const dx of [0, -1, 1, -2, 2]) if (!collide(m, piece.x + dx, piece.y)) { piece.m = m; piece.x += dx; return; } },
+      down() { if (!collide(piece.m, piece.x, piece.y + 1)) { piece.y++; score += 1; } },
+      drop() { let n = 0; while (!collide(piece.m, piece.x, piece.y + 1)) { piece.y++; n++; } score += 2 * n; lock(); clearTimeout(timer); if (running) timer = setTimeout(tick, delay()); }
+    };
+    function doAct(a) { if (!running || over) return; act[a](); draw(); }
+    function cell(x, y, col) { c.fillStyle = col; c.fillRect(x * CS + 1, y * CS + 1, CS - 2, CS - 2); }
+    function draw() {
+      c.fillStyle = '#071015'; c.fillRect(0, 0, 240, 320);
+      c.strokeStyle = '#13262a'; c.lineWidth = 1;
+      for (let x = 0; x <= COLS; x++) { c.beginPath(); c.moveTo(x * CS + .5, 0); c.lineTo(x * CS + .5, ROWS * CS); c.stroke(); }
+      for (let y = 0; y <= ROWS; y++) { c.beginPath(); c.moveTo(0, y * CS + .5); c.lineTo(COLS * CS, y * CS + .5); c.stroke(); }
+      board.forEach((row, y) => row.forEach((v, x) => { if (v) cell(x, y, COLORS[v]); }));
+      if (piece && !over) piece.m.forEach((row, r) => row.forEach((v, k) => { if (v && piece.y + r >= 0) cell(piece.x + k, piece.y + r, COLORS[piece.type]); }));
+      c.fillStyle = '#9bb0b6'; c.font = '12px Arial'; c.textAlign = 'left';
+      c.fillText('Next', 172, 20); c.fillText('Score', 172, 120); c.fillText('Lines', 172, 168); c.fillText('Level', 172, 216);
+      c.fillStyle = '#eefaf6'; c.font = '700 15px Arial'; c.fillText(String(score), 172, 138); c.fillText(String(lines), 172, 186); c.fillText(String(level), 172, 234);
+      if (nextType) SHAPES[nextType].forEach((row, r) => row.forEach((v, k) => { if (v) { c.fillStyle = COLORS[nextType]; c.fillRect(172 + k * 12, 30 + r * 12, 11, 11); } }));
+      if (over) { c.fillStyle = 'rgba(7,16,21,.7)'; c.fillRect(0, 120, COLS * CS, 70); c.fillStyle = '#fff'; c.font = '700 18px Arial'; c.textAlign = 'center'; c.fillText('Game over', COLS * CS / 2, 160); }
+      c.textAlign = 'start';
+    }
+    function start() {
+      clearTimeout(timer); board = Array.from({length: ROWS}, () => Array(COLS).fill(0)); score = 0; lines = 0; level = 1; over = false; bag = []; nextType = null;
+      running = true; spawn(); $('tetStart').textContent = 'Restart'; $('tetResult').textContent = 'Good luck!'; draw(); if (running) timer = setTimeout(tick, delay());
+    }
+    $('tetStart').onclick = start;
+    document.querySelectorAll('#tetPad button').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); doAct(b.dataset.a); }));
+    window.addEventListener('keydown', e => {
+      if (!running || !isActive(card)) return;
+      const map = {ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', ArrowUp: 'rot', x: 'rot', X: 'rot', ' ': 'drop'};
+      if (map[e.key]) { doAct(map[e.key]); e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    board = Array.from({length: ROWS}, () => Array(COLS).fill(0)); draw();
+  })();
+
+  /* ---------- Whack-a-Mole ---------- */
+  (() => {
+    const board = $('molesBoard'), res = $('molesResult'), holes = [];
+    let score = 0, left = 30, active = -1, running = false, best = 0, tm = 0, cd = 0, hideT = 0;
+    for (let i = 0; i < 9; i++) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Hole ' + (i + 1)); b.onclick = () => hit(i); board.appendChild(b); holes.push(b); }
+    const show = () => { res.textContent = 'Score: ' + score + ' · Time: ' + left + ' s'; };
+    function hide() { if (active >= 0) { holes[active].textContent = ''; holes[active].classList.remove('up'); active = -1; } }
+    function pop() {
+      if (!running) return; hide();
+      let i; do { i = rnd(9); } while (i === active);
+      active = i; holes[i].textContent = '🐹'; holes[i].classList.add('up');
+      hideT = setTimeout(() => { hide(); tm = setTimeout(pop, 350); }, Math.max(650, 1100 - score * 12));
+    }
+    function hit(i) { if (!running || i !== active) return; score++; clearTimeout(hideT); hide(); show(); tm = setTimeout(pop, 250); }
+    function finish() { running = false; clearTimeout(tm); clearTimeout(hideT); clearInterval(cd); hide(); best = Math.max(best, score); res.textContent = '⏱️ Time\'s up! You whacked ' + score + ' moles. Best: ' + best; $('molesStart').textContent = 'Play again'; $('molesStart').disabled = false; }
+    $('molesStart').onclick = () => {
+      clearTimeout(tm); clearTimeout(hideT); clearInterval(cd); hide();
+      score = 0; left = 30; running = true; $('molesStart').textContent = 'Playing…'; $('molesStart').disabled = true; show();
+      cd = setInterval(() => { left--; show(); if (left <= 0) finish(); }, 1000); tm = setTimeout(pop, 500);
+    };
+  })();
+
+  /* ---------- Stack Tower ---------- */
+  (() => {
+    const cv = $('stackCanvas'), c = cv.getContext('2d'), card = cardOf(cv), W = 240, H = 320, BH = 16;
+    let tower = [], cur, dir = 1, speed = 1.3, score = 0, best = 0, state = 'idle', raf = 0, diedAt = 0, msg = '';
+    function reset() { tower = [{x: 60, w: 120}]; cur = {x: 0, w: 120}; dir = 1; speed = 1.3; score = 0; msg = ''; }
+    function draw() {
+      c.fillStyle = '#071015'; c.fillRect(0, 0, W, H);
+      const cam = Math.max(0, (tower.length + 1) * BH - 230), col = i => 'hsl(' + ((i * 14 + 190) % 360) + ',70%,58%)';
+      tower.forEach((b, i) => { c.fillStyle = col(i); c.fillRect(b.x, H - (i + 1) * BH + cam, b.w, BH - 1); });
+      if (state === 'run') { c.fillStyle = col(tower.length); c.fillRect(cur.x, H - (tower.length + 1) * BH + cam, cur.w, BH - 1); }
+      c.fillStyle = '#eefaf6'; c.font = '700 22px Arial'; c.textAlign = 'center'; c.fillText(String(score), W / 2, 34);
+      c.font = '13px Arial'; c.fillStyle = '#9bb0b6';
+      if (state === 'idle') c.fillText('Click or press Space to start', W / 2, 60);
+      if (state === 'over') c.fillText('Tower fell! Click to try again', W / 2, 60);
+      if (msg && state === 'run') c.fillText(msg, W / 2, 56);
+      c.textAlign = 'start';
+    }
+    function loop() {
+      if (state !== 'run') return;
+      cur.x += dir * speed; if (cur.x <= 0) { cur.x = 0; dir = 1; } if (cur.x + cur.w >= W) { cur.x = W - cur.w; dir = -1; }
+      draw(); raf = requestAnimationFrame(loop);
+    }
+    function drop() {
+      if (state === 'over') { if (performance.now() - diedAt < 500) return; state = 'idle'; }
+      if (state === 'idle') { reset(); state = 'run'; $('stackResult').textContent = 'Height: 0'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); return; }
+      const top = tower[tower.length - 1];
+      const overlap = Math.min(cur.x + cur.w, top.x + top.w) - Math.max(cur.x, top.x);
+      if (overlap <= 0) { state = 'over'; diedAt = performance.now(); best = Math.max(best, score); $('stackResult').textContent = 'Tower fell at ' + score + '! Best: ' + best; draw(); return; }
+      let nx, nw;
+      if (Math.abs(cur.x - top.x) < 4) { nx = top.x; nw = top.w; msg = 'Perfect!'; } else { nx = Math.max(cur.x, top.x); nw = overlap; msg = ''; }
+      tower.push({x: nx, w: nw}); score++; speed = Math.min(3, 1.3 + score * .05);
+      dir = Math.random() < .5 ? 1 : -1; cur = {x: dir > 0 ? 0 : W - nw, w: nw};
+      $('stackResult').textContent = 'Height: ' + score + (best ? ' · Best: ' + best : '');
+    }
+    cv.style.touchAction = 'none';
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); drop(); });
+    $('stackBtn').addEventListener('pointerdown', e => { e.preventDefault(); drop(); });
+    window.addEventListener('keydown', e => { if (e.key === ' ' && isActive(card)) { if (!e.repeat) drop(); e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+    reset(); draw();
+  })();
+
+  /* ---------- Sliding Puzzle ---------- */
+  (() => {
+    const boardEl = $('slideBoard'), res = $('slideResult'); let N = 3, t = [], moves = 0, solved = false;
+    function render() {
+      boardEl.style.gridTemplateColumns = 'repeat(' + N + ',64px)'; boardEl.innerHTML = '';
+      t.forEach((v, i) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = v || ''; if (!v) b.className = 'empty'; else if (solved) b.className = 'ok'; b.onclick = () => move(i); boardEl.appendChild(b); });
+    }
+    function neighbours(i) { const r = Math.floor(i / N), c = i % N, a = []; if (r > 0) a.push(i - N); if (r < N - 1) a.push(i + N); if (c > 0) a.push(i - 1); if (c < N - 1) a.push(i + 1); return a; }
+    function move(i) {
+      if (solved) return; const e = t.indexOf(0); if (!neighbours(i).includes(e)) return;
+      [t[i], t[e]] = [t[e], t[i]]; moves++;
+      if (t.every((v, k) => v === (k + 1) % (N * N))) { solved = true; res.textContent = '🎉 Solved in ' + moves + ' moves!'; } else res.textContent = 'Moves: ' + moves;
+      render();
+    }
+    function reset() {
+      t = Array.from({length: N * N}, (_, i) => (i + 1) % (N * N)); moves = 0; solved = false; let prev = -1;
+      for (let n = 0; n < N * N * 30; n++) { const e = t.indexOf(0), opts = neighbours(e).filter(x => x !== prev); const k = opts[rnd(opts.length)]; [t[e], t[k]] = [t[k], t[e]]; prev = e; }
+      if (t.every((v, k) => v === (k + 1) % (N * N))) { reset(); return; }
+      res.textContent = 'Moves: 0'; render();
+    }
+    $('slideNew').onclick = reset;
+    $('slideSize').onclick = e => { const b = e.target.closest('button[data-n]'); if (!b) return; N = +b.dataset.n; document.querySelectorAll('#slideSize button').forEach(x => x.classList.toggle('on', x === b)); reset(); };
+    reset();
+  })();
+
+  /* ---------- Hint buttons ---------- */
+  function addHint(anchorId, fn, resultId) {
+    const a = $(anchorId); if (!a) return;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'hint-btn'; btn.textContent = '💡 Hint';
+    let out = resultId && $(resultId);
+    if (!out) { out = document.createElement('p'); out.className = 'result'; a.closest('.card').querySelector('.fs-stage, .card') ; (a.closest('.controls') || a).insertAdjacentElement('afterend', out); }
+    btn.onclick = () => { const m = fn(); if (m) out.textContent = m; };
+    a.insertAdjacentElement('afterend', btn);
+  }
+  const flash = (el, prop, val, ms) => { el.style[prop] = val; setTimeout(() => el.style[prop] = '', ms || 2000); };
+
+  // Guess the Number: narrow the range
+  let gHintFor = null, gHintN = 0;
+  addHint('newGuess', () => {
+    if (gHintFor !== secret) { gHintFor = secret; gHintN = 0; }
+    gHintN = Math.min(gHintN + 1, 3);
+    const w = [30, 15, 8][gHintN - 1];
+    let lo = secret - rnd(w + 1), hi = lo + w;
+    if (lo < 1) { lo = 1; hi = 1 + w; } if (hi > 100) { hi = 100; lo = 100 - w; }
+    return '💡 The number is between ' + lo + ' and ' + hi + (gHintN >= 3 ? ' and it is ' + (secret % 2 ? 'odd' : 'even') : '') + '.';
+  }, 'guessResult');
+
+  // Tic-Tac-Toe: best move for X (minimax)
+  addHint('tttReset', () => {
+    if (ended) return null;
+    const mm = (bd, pl) => {
+      const w = winner(bd); if (w === 'X') return 1; if (w === 'O') return -1; if (w === 'draw') return 0;
+      let best = pl === 'X' ? -2 : 2;
+      for (let i = 0; i < 9; i++) if (!bd[i]) { bd[i] = pl; const v = mm(bd, pl === 'X' ? 'O' : 'X'); bd[i] = ''; best = pl === 'X' ? Math.max(best, v) : Math.min(best, v); }
+      return best;
+    };
+    const bd = board.slice(), sc = [];
+    for (let i = 0; i < 9; i++) if (!bd[i]) { bd[i] = 'X'; sc.push([mm(bd, 'O'), i]); bd[i] = ''; }
+    if (!sc.length) return null;
+    const top = Math.max(...sc.map(x => x[0])), bestMoves = sc.filter(x => x[0] === top).map(x => x[1]);
+    const i = bestMoves[rnd(bestMoves.length)], el = $('tttBoard').children[i];
+    el.style.outline = '3px solid #ffd166'; el.style.outlineOffset = '-3px';
+    return '💡 Try the highlighted square.';
+  }, 'tttResult');
+
+  // Quick Math: parity and range
+  addHint('mathNext', () => {
+    const lo = mathAnswer - rnd(9), hi = lo + 8;
+    return '💡 The answer is ' + (Math.abs(mathAnswer) % 2 ? 'odd' : 'even') + ' and lies between ' + lo + ' and ' + hi + '.';
+  }, 'mathResult');
+
+  // Find the Pairs: highlight a matching pair
+  addHint('memoryReset', () => {
+    if (memLock) return null;
+    const kids = $('memoryBoard').children; let pair = null;
+    if (memOpen.length === 1) {
+      const sym = memDeck[memOpen[0]], other = memDeck.findIndex((x, i) => x === sym && i !== memOpen[0]);
+      if (other >= 0) pair = [memOpen[0], other];
+    } else {
+      const map = {}; memDeck.forEach((sy, i) => { if (!memMatched.includes(i) && !memOpen.includes(i)) (map[sy] = map[sy] || []).push(i); });
+      const ks = Object.keys(map).filter(k => map[k].length === 2);
+      if (ks.length) pair = map[ks[rnd(ks.length)]];
+    }
+    if (!pair) return null;
+    pair.forEach(i => flash(kids[i], 'boxShadow', '0 0 0 3px #ffd166', 1800));
+    return '💡 The two highlighted cards match!';
+  }, 'memoryResult');
+
+  // Crack the Code: reveal one digit and its position
+  let cHintFor = '', cHintPos = [];
+  addHint('codeReset', () => {
+    if (cHintFor !== secretCode) { cHintFor = secretCode; cHintPos = []; }
+    const left = [0, 1, 2].filter(i => !cHintPos.includes(i));
+    if (!left.length) return 'All three digits are already revealed!';
+    const pos = left[rnd(left.length)]; cHintPos.push(pos);
+    return '💡 Digit ' + secretCode[pos] + ' is in position ' + (pos + 1) + '.';
+  }, 'codeResult');
+
+  // Repeat the Sequence: replay from the start of the level
+  addHint('sequenceStart', () => {
+    if (!seq.length) return 'Press Start first.';
+    if (seqPlaying) return null;
+    seqIndex = 0; playSequence(); return '💡 Watch the sequence again…';
+  }, 'sequenceResult');
+
+  // Minesweeper: open a safe cell (3 per game)
+  let mHintFor = null, mHintUsed = 0;
+  addHint('minesReset', () => {
+    if (mineEnded) return null;
+    if (mHintFor !== mineSet) { mHintFor = mineSet; mHintUsed = 0; }
+    if (mHintUsed >= 3) return 'No hints left for this game.';
+    const safe = [...Array(64).keys()].filter(i => !mineSet.includes(i) && !mineOpened.includes(i)); if (!safe.length) return null;
+    const near = safe.filter(i => mineOpened.some(o => Math.abs(o % 8 - i % 8) <= 1 && Math.abs(Math.floor(o / 8) - Math.floor(i / 8)) <= 1));
+    const pool = near.length ? near : safe; mHintUsed++;
+    openMine(pool[rnd(pool.length)]);
+    return mineEnded ? null : '💡 A safe cell was opened for you. Hints left: ' + (3 - mHintUsed) + '.';
+  }, 'minesResult');
+
+  // 2048: suggest a direction
+  addHint('reset2048', () => {
+    const sim = dir => {
+      const g = grid2048.slice(); let gain = 0;
+      for (let r = 0; r < 4; r++) {
+        const ids = Array.from({length: 4}, (_, c) => dir === 'left' ? r * 4 + c : dir === 'right' ? r * 4 + 3 - c : dir === 'up' ? c * 4 + r : (3 - c) * 4 + r);
+        const a = ids.map(i => g[i]).filter(Boolean), out = [];
+        for (let i = 0; i < a.length; i++) { if (a[i] === a[i + 1]) { out.push(a[i] * 2); gain += a[i] * 2; i++; } else out.push(a[i]); }
+        while (out.length < 4) out.push(0); ids.forEach((id, j) => g[id] = out[j]);
+      }
+      return {score: g.join() === grid2048.join() ? -1e9 : gain + 3 * g.filter(v => !v).length, moved: g.join() !== grid2048.join()};
+    };
+    const names = {up: '↑ Up', down: '↓ Down', left: '← Left', right: '→ Right'};
+    const opts = ['up', 'down', 'left', 'right'].map(d => [sim(d), d]).filter(x => x[0].moved).sort((x, y) => y[0].score - x[0].score);
+    if (!opts.length) return 'No moves left!';
+    const d = opts[0][1], btn = document.querySelector('[data-2048="' + d + '"]'); if (btn) flash(btn, 'outline', '3px solid #ffd166', 2000);
+    return '💡 Try moving ' + names[d] + '.';
+  });
+
+  // Games with private state (registered above)
+  addHint('c4New', () => H.c4(), 'c4Result');
+  addHint('loNew', () => H.lo(), 'loResult');
+  addHint('hmNew', () => H.hm(), 'hmResult');
+})();
+</script>
+<script>
+// Copy protection (deterrent only): blocks selecting, copying, right-click, dragging and common "save/view source" shortcuts.
+(() => {
+  const isField = t => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  const block = e => { e.preventDefault(); e.stopPropagation(); };
+  ['contextmenu', 'dragstart'].forEach(ev => document.addEventListener(ev, e => { if (!isField(e.target)) block(e); }, true));
+  ['selectstart', 'copy', 'cut'].forEach(ev => document.addEventListener(ev, e => { if (!isField(e.target)) block(e); }, true));
+  window.addEventListener('keydown', e => {
+    const k = (e.key || '').toLowerCase(), mod = e.ctrlKey || e.metaKey;
+    const devtools = e.key === 'F12' || (mod && e.shiftKey && ['i', 'j', 'c', 'k'].includes(k)) || (e.metaKey && e.altKey && ['i', 'j', 'c', 'u'].includes(k));
+    const blockedMod = mod && !e.shiftKey && ['c', 'x', 'a', 's', 'u', 'p'].includes(k) && !isField(e.target);
+    const blockedSaveView = mod && ['s', 'u', 'p'].includes(k);
+    if (devtools || blockedMod || blockedSaveView) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  const clear = () => { const sel = window.getSelection && window.getSelection(); if (sel && sel.rangeCount && !isField(document.activeElement)) sel.removeAllRanges(); };
+  document.addEventListener('selectionchange', clear);
+})();
+</script>
+</body>
+</html>
