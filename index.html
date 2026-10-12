@@ -1260,16 +1260,23 @@ window.addEventListener('keydown', function (event) {
       if (state === 'dead') c.fillText('Click to try again', W / 2, 60);
       c.textAlign = 'start';
     }
-    function loop() { step(); draw(); if (state === 'run') raf = requestAnimationFrame(loop); }
+    let lastFrame = 0, frameCarry = 0;
+    function loop(now = performance.now()) {
+      if (!lastFrame) lastFrame = now;
+      frameCarry += Math.min(100, now - lastFrame); lastFrame = now;
+      let ticks = 0;
+      while (frameCarry >= 16.6667 && ticks < 6 && state === 'run') { step(); frameCarry -= 16.6667; ticks++; }
+      draw(); if (state === 'run') raf = requestAnimationFrame(loop); else { lastFrame = 0; frameCarry = 0; }
+    }
     function press() {
       holding = true;
-      if (state === 'dead') { if (performance.now() - diedAt < 500) return; reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
-      else if (state === 'idle') { reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+      if (state === 'dead') { if (performance.now() - diedAt < 500) return; reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); lastFrame = 0; frameCarry = 0; raf = requestAnimationFrame(loop); }
+      else if (state === 'idle') { reset(); state = 'run'; $('dashResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); lastFrame = 0; frameCarry = 0; raf = requestAnimationFrame(loop); }
     }
     const release = () => { holding = false; };
     cv.style.touchAction = 'none';
-    cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
-    $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} press(); });
+    $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); try { $('dashBtn').setPointerCapture(e.pointerId); } catch (_) {} press(); });
     window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
     window.addEventListener('keydown', e => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) { if (!e.repeat) press(); else holding = true; e.preventDefault(); e.stopImmediatePropagation(); }
@@ -1365,16 +1372,23 @@ window.addEventListener('keydown', function (event) {
       if (state === 'dead') c.fillText('Click to try again', W / 2, H - 14);
       c.textAlign = 'start';
     }
-    function loop() { step(); draw(); if (state === 'run') raf = requestAnimationFrame(loop); }
+    let lastFrame = 0, frameCarry = 0;
+    function loop(now = performance.now()) {
+      if (!lastFrame) lastFrame = now;
+      frameCarry += Math.min(100, now - lastFrame); lastFrame = now;
+      let ticks = 0;
+      while (frameCarry >= 16.6667 && ticks < 6 && state === 'run') { step(); frameCarry -= 16.6667; ticks++; }
+      draw(); if (state === 'run') raf = requestAnimationFrame(loop); else { lastFrame = 0; frameCarry = 0; }
+    }
     function press() {
       holding = true;
       if (state === 'dead' && performance.now() - diedAt < 500) return;
-      if (state === 'dead' || state === 'idle') { reset(); state = 'run'; $('arrowResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+      if (state === 'dead' || state === 'idle') { reset(); state = 'run'; $('arrowResult').textContent = 'Level 1 — go!'; cancelAnimationFrame(raf); lastFrame = 0; frameCarry = 0; raf = requestAnimationFrame(loop); }
     }
     const release = () => { holding = false; };
     cv.style.touchAction = 'none';
-    cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
-    $('arrowBtn').addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} press(); });
+    $('arrowBtn').addEventListener('pointerdown', e => { e.preventDefault(); try { $('arrowBtn').setPointerCapture(e.pointerId); } catch (_) {} press(); });
     window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
     window.addEventListener('keydown', e => {
       if ((e.key === ' ' || e.key === 'ArrowUp') && isActive(card)) { if (!e.repeat) press(); else holding = true; e.preventDefault(); e.stopImmediatePropagation(); }
@@ -1504,7 +1518,7 @@ window.addEventListener('keydown', function (event) {
     }
     function drop() {
       if (state === 'over') { if (performance.now() - diedAt < 500) return; state = 'idle'; }
-      if (state === 'idle') { reset(); state = 'run'; $('stackResult').textContent = 'Height: 0'; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); return; }
+      if (state === 'idle') { reset(); state = 'run'; $('stackResult').textContent = 'Height: 0'; cancelAnimationFrame(raf); lastFrame = 0; frameCarry = 0; raf = requestAnimationFrame(loop); return; }
       const top = tower[tower.length - 1];
       const overlap = Math.min(cur.x + cur.w, top.x + top.w) - Math.max(cur.x, top.x);
       if (overlap <= 0) { state = 'over'; diedAt = performance.now(); best = Math.max(best, score); $('stackResult').textContent = 'Tower fell at ' + score + '! Best: ' + best; draw(); return; }
