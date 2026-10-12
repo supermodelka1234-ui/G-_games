@@ -1193,7 +1193,7 @@ window.addEventListener('keydown', function (event) {
     const W = 320, H = 200, GY = 160, S = 24, CX = 60, K = .7, GRAV = .55 * K * K, JUMP = -9 * K, LEVEL_LEN = 1600;
     let state = 'idle', raf = 0, obs = [], spawnX = 0, speed = 2.4 * .7, level = 1, dist = 0, levelDist = 0;
     let y = GY - S, vy = 0, onGround = true, ang = 0, holding = false, best = 0, diedAt = 0, banner = 0;
-    const spd = () => Math.min(4.2, 2.4 + .2 * (level - 1)) * K;
+    const spd = () => Math.min(5.8, 3.6 + .25 * (level - 1));
     const score = () => Math.floor(dist / 10);
     function reset() { obs = []; spawnX = W + 120; level = 1; dist = 0; levelDist = 0; speed = spd(); y = GY - S; vy = 0; onGround = true; ang = 0; banner = 0; }
     function addPattern() {
@@ -1293,7 +1293,7 @@ window.addEventListener('keydown', function (event) {
     /*ARROW_LOGIC_START*/
     let state = 'idle', raf = 0, pts = [], trail = [], spikes = [], nextSpikeX = 0, level = 1, dist = 0, levelDist = 0, y = H / 2, holding = false, best = 0, diedAt = 0, banner = 0, ang = Math.PI / 4;
     const SPIKE_H = 14, SPIKE_HW = 7;
-    const spd = () => Math.min(3.1, 1.7 + .12 * (level - 1));
+    const spd = () => Math.min(5.0, 2.8 + .18 * (level - 1));
     const gapFor = () => Math.max(86, 116 - 4 * (level - 1));
     const deltaFor = () => Math.min(22, 14 + 2 * (level - 1));
     const score = () => Math.floor(dist / 10);
