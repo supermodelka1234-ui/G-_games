@@ -183,10 +183,22 @@ img,canvas,svg{-webkit-user-drag:none;user-drag:none}
 .tet-pad button{min-width:48px;height:42px;padding:0 12px;font-size:18px;font-weight:700}
 </style>
 
-     
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8082000262072733"
-crossorigin="anonymous"></script>
-  
+<style>
+#visit-counter {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 99999;
+  background: rgba(10, 20, 15, 0.9);
+  color: #39ff88;
+  border: 1px solid #39ff88;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font: bold 13px Arial, sans-serif;
+  box-shadow: 0 0 12px #39ff8844;
+}
+</style>
+
 </head>
 <body>
 <nav class="topnav" id="top">
@@ -1703,5 +1715,21 @@ window.addEventListener('keydown', function (event) {
   document.addEventListener('selectionchange', clear);
 })();
 </script>
+     
+<div id="visit-counter">
+  👁 Завантаження лічильника...
+</div>
+<script>
+fetch('https://librecounter.org/counter.svg')
+  .then(() => {
+    document.getElementById('visit-counter').textContent =
+      '👁 Сайт G-Games';
+  })
+  .catch(() => {
+    document.getElementById('visit-counter').textContent =
+      '👁 G-Games';
+  });
+</script>
+
 </body>
 </html>
