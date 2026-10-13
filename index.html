@@ -1190,7 +1190,7 @@ window.addEventListener('keydown', function (event) {
   /* ---------- Cube Dash (endless levels) ---------- */
   (() => {
     const cv = $('dashCanvas'), c = cv.getContext('2d'), card = cardOf(cv);
-    const W = 320, H = 200, GY = 160, S = 24, CX = 60, K = .7, GRAV = .55 * K * K, JUMP = -9 * K, LEVEL_LEN = 1600;
+    const W = 320, H = 200, GY = 160, S = 24, CX = 60, K = .7, GRAV = .58, JUMP = -8.2, LEVEL_LEN = 1600;
     let state = 'idle', raf = 0, obs = [], spawnX = 0, speed = 2.4 * .7, level = 1, dist = 0, levelDist = 0;
     let y = GY - S, vy = 0, onGround = true, ang = 0, holding = false, best = 0, diedAt = 0, banner = 0;
     const spd = () => Math.min(5.8, 3.6 + .25 * (level - 1));
